@@ -4,15 +4,122 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FlowState — Tarefas</title>
+  <link rel="manifest" href="../manifest.json" />
   <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
   <link rel="icon" type="image/x-icon" href="../favicon.ico" />
-  <link rel="apple-touch-icon" href="../icons/icon-192.png" />
-  <link rel="manifest" href="../manifest.json" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link rel="stylesheet" href="../css/themes.css" />
   <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    /* ── Add task type buttons ── */
+    .add-type-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Date shortcuts ── */
+    .date-shortcuts {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+    .date-shortcut {
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .date-shortcut:hover { background: var(--primary-dim); color: var(--primary); border-color: var(--primary); }
+
+    /* ── Recurring type radio ── */
+    .rec-type-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .rec-type-tab {
+      flex: 1;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      text-align: center;
+      transition: all .15s;
+    }
+    .rec-type-tab input { display: none; }
+    .rec-type-tab:has(input:checked) {
+      background: var(--primary-dim);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* ── Day-of-week picker ── */
+    .dow-picker {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .dow-btn {
+      width: 38px; height: 38px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-2);
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .15s;
+    }
+    .dow-btn.selected {
+      background: var(--primary-dim);
+      border-color: var(--primary);
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    /* ── DOM picker ── */
+    .dom-picker {
+      display: none;
+      align-items: center;
+      gap: 10px;
+    }
+    .dom-picker input {
+      width: 80px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      outline: none;
+    }
+    .dom-picker label { font-size: 13px; color: var(--text-2); }
+
+    .panel-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--text-3);
+      margin-bottom: 8px;
+      display: block;
+    }
+  </style>
 </head>
 <body>
   <aside class="sidebar" id="sidebar">
@@ -21,18 +128,11 @@
       <span class="logo-text">FlowState</span>
     </div>
     <nav class="sidebar-nav">
-      <a href="../index.html" class="nav-item">
-        <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
-      </a>
-      <a href="todo.html" class="nav-item active">
-        <i class="fa-solid fa-list-check"></i><span>Tarefas</span>
-      </a>
-      <a href="pomodoro-history.html" class="nav-item">
-        <i class="fa-solid fa-clock-rotate-left"></i><span>Pomodoro</span>
-      </a>
-      <a href="settings.html" class="nav-item">
-        <i class="fa-solid fa-sliders"></i><span>Configurações</span>
-      </a>
+      <a href="../index.html" class="nav-item"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
+      <a href="todo.html" class="nav-item active"><i class="fa-solid fa-list-check"></i><span>Tarefas</span></a>
+      <a href="pomodoro-history.html" class="nav-item"><i class="fa-solid fa-clock-rotate-left"></i><span>Pomodoro</span></a>
+      <a href="schedule.html" class="nav-item"><i class="fa-solid fa-calendar-days"></i><span>Cronograma</span></a>
+      <a href="settings.html" class="nav-item"><i class="fa-solid fa-sliders"></i><span>Configurações</span></a>
     </nav>
     <div class="sidebar-footer">
       <div class="user-avatar" id="user-avatar">F</div>
@@ -55,18 +155,26 @@
         <h1 class="page-title">Tarefas</h1>
         <p class="page-subtitle" id="tasks-summary">0 pendentes · 0 concluídas</p>
       </div>
-      <div class="header-actions">
-        <button class="btn-primary" id="btn-add-task">
-          <i class="fa-solid fa-plus"></i> Nova Tarefa
+      <div class="header-actions add-type-bar">
+        <button class="btn-primary" id="btn-add-simple">
+          <i class="fa-solid fa-plus"></i> Tarefa Simples
+        </button>
+        <button class="btn-outline" id="btn-add-recurring">
+          <i class="fa-solid fa-rotate"></i> Semanal / Mensal
         </button>
       </div>
     </div>
 
-    <!-- Add task inline -->
-    <div class="add-task-panel" id="add-task-panel" style="display:none">
-      <div class="card">
-        <div class="form-row">
-          <input type="text" id="task-input" class="task-input-field" placeholder="Nome da tarefa..." maxlength="120" />
+    <!-- ── ADD PANELS (toggled by JS) ── -->
+    <div id="add-task-panel" style="display:none; margin-bottom:20px;">
+
+      <!-- SIMPLE TASK -->
+      <div id="add-simple-panel" class="card" style="display:none; animation: slideDown .25s ease;">
+        <div style="font-family:'Syne',sans-serif; font-weight:700; font-size:13px; margin-bottom:16px; color:var(--text-2); text-transform:uppercase; letter-spacing:.08em;">
+          <i class="fa-solid fa-plus" style="color:var(--primary)"></i> Nova Tarefa Simples
+        </div>
+        <div class="form-row" style="align-items:flex-start;">
+          <input type="text" id="task-input" class="task-input-field" placeholder="Nome da tarefa..." maxlength="120" style="flex:2" />
           <select id="task-priority" class="task-select">
             <option value="low">🟢 Baixa</option>
             <option value="medium" selected>🟡 Média</option>
@@ -79,12 +187,87 @@
             <option value="health">❤️ Saúde</option>
             <option value="other">📌 Outro</option>
           </select>
-          <input type="date" id="task-due" class="task-select" />
         </div>
-        <div class="form-row form-row--actions">
-          <input type="text" id="task-note" class="task-input-field" placeholder="Nota (opcional)..." maxlength="200" />
+        <div style="margin-top:10px;">
+          <span class="panel-section-label">Data de vencimento</span>
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <input type="date" id="task-due" class="task-select" />
+            <div class="date-shortcuts">
+              <button class="date-shortcut" data-days="0">Hoje</button>
+              <button class="date-shortcut" data-days="1">Amanhã</button>
+              <button class="date-shortcut" data-days="7">+7 dias</button>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:10px;">
+          <input type="text" id="task-note" class="task-input-field" placeholder="Nota (opcional)..." maxlength="200" style="width:100%" />
+        </div>
+        <div style="margin-top:14px; display:flex; gap:8px;">
           <button class="btn-primary" id="btn-save-task">Adicionar</button>
           <button class="btn-outline" id="btn-cancel-task">Cancelar</button>
+        </div>
+      </div>
+
+      <!-- RECURRING TASK -->
+      <div id="add-recurring-panel" class="card" style="display:none; animation: slideDown .25s ease;">
+        <div style="font-family:'Syne',sans-serif; font-weight:700; font-size:13px; margin-bottom:16px; color:var(--text-2); text-transform:uppercase; letter-spacing:.08em;">
+          <i class="fa-solid fa-rotate" style="color:var(--accent-purple)"></i> Nova Tarefa Recorrente
+        </div>
+        <div class="form-row" style="align-items:flex-start; margin-bottom:14px;">
+          <input type="text" id="rec-task-input" class="task-input-field" placeholder="Nome da tarefa recorrente..." maxlength="120" style="flex:2" />
+          <select id="rec-priority" class="task-select">
+            <option value="low">🟢 Baixa</option>
+            <option value="medium" selected>🟡 Média</option>
+            <option value="high">🔴 Alta</option>
+          </select>
+          <select id="rec-category" class="task-select">
+            <option value="personal">👤 Pessoal</option>
+            <option value="work">💼 Trabalho</option>
+            <option value="study">📚 Estudo</option>
+            <option value="health">❤️ Saúde</option>
+            <option value="other">📌 Outro</option>
+          </select>
+        </div>
+
+        <!-- Type selector -->
+        <span class="panel-section-label">Frequência</span>
+        <div class="rec-type-tabs">
+          <label class="rec-type-tab">
+            <input type="radio" name="rec-type" value="weekly" checked />
+            🗓️ Semanal
+          </label>
+          <label class="rec-type-tab">
+            <input type="radio" name="rec-type" value="monthly" />
+            📅 Mensal
+          </label>
+        </div>
+
+        <!-- DOW picker (weekly) -->
+        <div id="dow-picker" style="margin-bottom:14px;">
+          <span class="panel-section-label">Dias da semana</span>
+          <div class="dow-picker">
+            <button class="dow-btn" data-dow="0">Dom</button>
+            <button class="dow-btn" data-dow="1">Seg</button>
+            <button class="dow-btn" data-dow="2">Ter</button>
+            <button class="dow-btn" data-dow="3">Qua</button>
+            <button class="dow-btn" data-dow="4">Qui</button>
+            <button class="dow-btn" data-dow="5">Sex</button>
+            <button class="dow-btn" data-dow="6">Sáb</button>
+          </div>
+        </div>
+
+        <!-- DOM picker (monthly) -->
+        <div id="dom-picker" class="dom-picker" style="margin-bottom:14px;">
+          <span class="panel-section-label" style="margin-bottom:0">Dia do mês:</span>
+          <input type="number" id="rec-dom" min="1" max="31" value="1" />
+          <label>de cada mês</label>
+        </div>
+
+        <input type="text" id="rec-note" class="task-input-field" placeholder="Nota (opcional)..." maxlength="200" style="width:100%; margin-bottom:14px;" />
+
+        <div style="display:flex; gap:8px;">
+          <button class="btn-primary" id="btn-save-recurring" style="background:var(--accent-purple)">Criar Recorrente</button>
+          <button class="btn-outline" id="btn-cancel-recurring">Cancelar</button>
         </div>
       </div>
     </div>
@@ -117,23 +300,16 @@
       </div>
     </div>
 
-    <!-- Tasks container -->
-    <div class="tasks-container" id="tasks-container">
-      <!-- Tasks rendered by todo.js -->
-    </div>
-
-    <!-- Empty state -->
+    <div class="tasks-container" id="tasks-container"></div>
     <div class="empty-state" id="empty-state" style="display:none">
       <div class="empty-icon">📋</div>
       <h3>Nenhuma tarefa encontrada</h3>
       <p>Crie sua primeira tarefa e comece a focar no que importa.</p>
-      <button class="btn-primary" onclick="document.getElementById('btn-add-task').click()">
-        + Criar tarefa
-      </button>
+      <button class="btn-primary" onclick="document.getElementById('btn-add-simple').click()">+ Criar tarefa</button>
     </div>
   </main>
 
-  <!-- Edit task modal -->
+  <!-- Edit modal -->
   <div class="modal-overlay" id="edit-modal">
     <div class="modal">
       <div class="modal-header">
@@ -183,7 +359,6 @@
   </div>
 
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
-
   <script src="../js/main.js"></script>
   <script src="../js/todo.js"></script>
 </body>

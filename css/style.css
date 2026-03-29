@@ -1460,3 +1460,23 @@ input[type="range"]::-webkit-slider-thumb {
   .page-header { flex-direction: column; gap: 12px; }
   .timer-display { font-size: 36px; }
 }
+
+/* ─── DOW BUTTON (shared: todo recurring + schedule) ─── */
+.dow-btn {
+  width: 38px; height: 38px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-2);
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.dow-btn.selected {
+  background: var(--primary-dim);
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 700;
+}

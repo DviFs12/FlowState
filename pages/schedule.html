@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlowState — Cronograma</title>
+  <link rel="manifest" href="../manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+  <link rel="icon" type="image/x-icon" href="../favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="../css/themes.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    /* ─── TIMELINE ─── */
+    .timeline-wrap {
+      display: flex;
+      gap: 0;
+    }
+
+    .time-axis {
+      display: flex;
+      flex-direction: column;
+      width: 48px;
+      flex-shrink: 0;
+      padding-top: 0;
+    }
+
+    .time-label {
+      height: 48px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
+      padding-right: 10px;
+      font-size: 11px;
+      color: var(--text-3);
+      font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
+    }
+
+    .timeline-grid {
+      flex: 1;
+      position: relative;
+      border-left: 1px solid var(--border);
+    }
+
+    .timeline-row {
+      height: 48px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .timeline-row:nth-child(even) { background: rgba(255,255,255,0.015); }
+
+    /* Current time indicator */
+    .now-line {
+      position: absolute;
+      left: 0; right: 0;
+      height: 2px;
+      background: var(--accent-red);
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .now-line::before {
+      content: '';
+      position: absolute;
+      left: -4px;
+      top: -4px;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--accent-red);
+    }
+
+    /* ─── EVENTS ─── */
+    .sched-event {
+      position: absolute;
+      left: 4px; right: 4px;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      overflow: hidden;
+      cursor: pointer;
+      transition: filter .15s, transform .15s;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .sched-event:hover { filter: brightness(1.15); transform: scaleX(0.99); }
+
+    .sched-event .ev-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sched-event .ev-time  { font-size: 10px; opacity: .75; margin-top: 1px; }
+
+    /* ─── ADD EVENT PANEL ─── */
+    .quick-presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .preset-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text-2);
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .preset-btn:hover {
+      background: var(--primary-dim);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* ─── LIFE PIE ─── */
+    .life-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .life-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .life-legend-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+
+    .life-legend-item .leg-left { display: flex; align-items: center; gap: 8px; }
+    .life-legend-item .leg-dot  { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+    .life-hours {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .life-pct {
+      font-size: 11px;
+      color: var(--text-3);
+    }
+
+    /* ─── COLOR PICKER ─── */
+    .color-options {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .color-swatch {
+      width: 24px; height: 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color .15s, transform .15s;
+    }
+
+    .color-swatch.selected { border-color: var(--text); transform: scale(1.15); }
+    .color-swatch:hover    { transform: scale(1.1); }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 900px) {
+      .life-grid { grid-template-columns: 1fr; }
+      .sched-layout { flex-direction: column; }
+    }
+
+    @media (max-width: 600px) {
+      .time-label { font-size: 9px; padding-right: 6px; }
+      .time-axis  { width: 36px; }
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">⟁</span>
+      <span class="logo-text">FlowState</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="../index.html" class="nav-item"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
+      <a href="todo.html" class="nav-item"><i class="fa-solid fa-list-check"></i><span>Tarefas</span></a>
+      <a href="pomodoro-history.html" class="nav-item"><i class="fa-solid fa-clock-rotate-left"></i><span>Pomodoro</span></a>
+      <a href="schedule.html" class="nav-item active"><i class="fa-solid fa-calendar-days"></i><span>Cronograma</span></a>
+      <a href="settings.html" class="nav-item"><i class="fa-solid fa-sliders"></i><span>Configurações</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-avatar" id="user-avatar">F</div>
+      <div class="user-info">
+        <span class="user-name" id="sidebar-username">Usuário</span>
+        <span class="user-status">● Online</span>
+      </div>
+    </div>
+  </aside>
+
+  <header class="mobile-header">
+    <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+    <span class="mobile-logo">⟁ FlowState</span>
+    <div class="mobile-avatar" id="mobile-avatar">F</div>
+  </header>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Cronograma</h1>
+        <p class="page-subtitle">Visualize como você distribui o seu tempo de vida</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-primary" id="btn-add-event">
+          <i class="fa-solid fa-plus"></i> Novo Bloco
+        </button>
+        <button class="btn-icon" id="btn-clear-schedule" title="Limpar cronograma">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Add event panel -->
+    <div class="card" id="add-event-panel" style="display:none; margin-bottom:20px; animation: slideDown .25s ease;">
+      <div style="font-family:'Syne',sans-serif; font-weight:700; font-size:13px; margin-bottom:14px; color:var(--text-2); text-transform:uppercase; letter-spacing:.08em;">
+        <i class="fa-solid fa-clock" style="color:var(--primary)"></i> Novo Bloco de Tempo
+      </div>
+
+      <!-- Quick presets -->
+      <div style="margin-bottom:14px;">
+        <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3); display:block; margin-bottom:8px;">Atalhos rápidos</span>
+        <div class="quick-presets" id="quick-presets">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <div class="form-row" style="align-items:flex-end;">
+        <div class="form-group" style="flex:2">
+          <label>Nome do bloco</label>
+          <input type="text" id="ev-title" placeholder="ex: Aula de Matemática" maxlength="60" />
+        </div>
+        <div class="form-group">
+          <label>Início</label>
+          <input type="time" id="ev-start" value="08:00" />
+        </div>
+        <div class="form-group">
+          <label>Fim</label>
+          <input type="time" id="ev-end" value="09:00" />
+        </div>
+      </div>
+
+      <div class="form-row" style="align-items:flex-end;">
+        <div class="form-group">
+          <label>Categoria</label>
+          <select id="ev-category">
+            <option value="study">📚 Estudo</option>
+            <option value="work">💼 Trabalho</option>
+            <option value="sleep">😴 Dormir</option>
+            <option value="exercise">🏃 Exercício</option>
+            <option value="leisure">🎮 Lazer</option>
+            <option value="social">👥 Social</option>
+            <option value="transport">🚌 Transporte</option>
+            <option value="food">🍽️ Alimentação</option>
+            <option value="hygiene">🚿 Higiene</option>
+            <option value="other">📌 Outro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Cor</label>
+          <div class="color-options" id="color-options">
+            <!-- Rendered by JS -->
+          </div>
+          <input type="hidden" id="ev-color" value="#6ee7b7" />
+        </div>
+        <div class="form-group">
+          <label>Dias da semana</label>
+          <div style="display:flex; gap:4px; flex-wrap:wrap;">
+            <button class="dow-btn selected" data-edow="0" style="width:32px;height:32px;font-size:10px">Dom</button>
+            <button class="dow-btn selected" data-edow="1" style="width:32px;height:32px;font-size:10px">Seg</button>
+            <button class="dow-btn selected" data-edow="2" style="width:32px;height:32px;font-size:10px">Ter</button>
+            <button class="dow-btn selected" data-edow="3" style="width:32px;height:32px;font-size:10px">Qua</button>
+            <button class="dow-btn selected" data-edow="4" style="width:32px;height:32px;font-size:10px">Qui</button>
+            <button class="dow-btn selected" data-edow="5" style="width:32px;height:32px;font-size:10px">Sex</button>
+            <button class="dow-btn selected" data-edow="6" style="width:32px;height:32px;font-size:10px">Sáb</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-top:4px;">
+        <button class="btn-primary" id="btn-save-event">Adicionar Bloco</button>
+        <button class="btn-outline" id="btn-cancel-event">Cancelar</button>
+      </div>
+    </div>
+
+    <!-- Main layout: timeline + life donut -->
+    <div style="display:grid; grid-template-columns: 1fr 320px; gap:20px; align-items:start;" class="sched-layout">
+
+      <!-- Timeline card -->
+      <div class="card" data-animate>
+        <div class="card-header">
+          <h2 class="card-title"><i class="fa-solid fa-clock"></i> Linha do Tempo — Hoje</h2>
+          <span id="today-label" class="date-badge"></span>
+        </div>
+
+        <div class="timeline-wrap">
+          <div class="time-axis" id="time-axis"></div>
+          <div class="timeline-grid" id="timeline-grid"></div>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div style="display:flex; flex-direction:column; gap:20px;">
+
+        <!-- Life pie -->
+        <div class="card" data-animate>
+          <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-chart-pie"></i> Onde vai seu tempo</h2>
+            <span style="font-size:11px; color:var(--text-3)">24h / dia</span>
+          </div>
+          <div class="life-grid">
+            <div style="position:relative; height:160px;">
+              <canvas id="life-chart"></canvas>
+            </div>
+            <div class="life-legend" id="life-legend"></div>
+          </div>
+          <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border); font-size:12px; color:var(--text-3); text-align:center;" id="free-time-note"></div>
+        </div>
+
+        <!-- Weekly overview -->
+        <div class="card" data-animate>
+          <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-calendar-week"></i> Visão Semanal</h2>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px;" id="weekly-overview"></div>
+        </div>
+
+        <!-- Events list -->
+        <div class="card" data-animate>
+          <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-list"></i> Blocos Cadastrados</h2>
+            <span class="cycle-badge" id="events-count">0</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:8px; max-height:320px; overflow-y:auto;" id="events-list"></div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Delete confirm -->
+  <div class="modal-overlay" id="delete-ev-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Remover bloco?</h3>
+        <button class="modal-close" id="close-del-modal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body"><p id="del-ev-name">Este bloco será removido do cronograma.</p></div>
+      <div class="modal-footer">
+        <button class="btn-outline" id="cancel-del">Cancelar</button>
+        <button class="btn-danger"  id="confirm-del">Remover</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+  <script src="../js/main.js"></script>
+  <script src="../js/schedule.js"></script>
+</body>
+</html>
