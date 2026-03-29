@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let mode         = 'focus';  // 'focus' | 'short' | 'long'
   let cyclesDone   = 0;
   let sessionToday = Store.get('pomo_session_' + todayKey(), 0);
+  let sessionStart = null; // ISO timestamp when current session started
 
   /* ─── ELEMENTS ─── */
   const display   = document.getElementById('timer-display');
@@ -91,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function start() {
+    if (!sessionStart) sessionStart = new Date().toISOString(); // mark start time
     running = true;
     interval = setInterval(tick, 1000);
     btnStart.innerHTML = '<i class="fa-solid fa-pause"></i> Pausar';
@@ -116,6 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function setMode(m) {
     mode = m;
+    sessionStart = null; // new session begins fresh
     const mins = { focus: FOCUS_MINS, short: SHORT_MINS, long: LONG_MINS };
     totalSeconds = (mins[m] || 25) * 60;
     remaining    = totalSeconds;
@@ -129,7 +132,24 @@ document.addEventListener('DOMContentLoaded', () => {
     onCycleEnd();
   }
 
+  function logSession() {
+    const durationSeconds = totalSeconds - remaining;
+    if (durationSeconds < 10) return; // ignore accidental skips
+    const entry = {
+      mode,
+      startedAt: sessionStart || new Date().toISOString(),
+      durationSeconds
+    };
+    const sessions = Store.get('pomo_sessions', []);
+    sessions.push(entry);
+    // Keep max 500 sessions to avoid bloating localStorage
+    if (sessions.length > 500) sessions.splice(0, sessions.length - 500);
+    Store.set('pomo_sessions', sessions);
+    sessionStart = null; // reset for next session
+  }
+
   function onCycleEnd() {
+    logSession();
     playAlertSound();
 
     if (mode === 'focus') {

@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlowState — Histórico Pomodoro</title>
+  <link rel="manifest" href="../manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+  <link rel="icon" type="image/x-icon" href="../favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="../css/themes.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    /* ── Page-specific extras ── */
+    .heatmap-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+    }
+
+    .heatmap-day {
+      aspect-ratio: 1;
+      border-radius: 5px;
+      background: var(--surface-2);
+      position: relative;
+      cursor: default;
+      transition: transform 0.15s;
+    }
+
+    .heatmap-day:hover { transform: scale(1.15); }
+
+    .heatmap-day[data-level="1"] { background: color-mix(in srgb, var(--primary) 20%, var(--surface-2)); }
+    .heatmap-day[data-level="2"] { background: color-mix(in srgb, var(--primary) 40%, var(--surface-2)); }
+    .heatmap-day[data-level="3"] { background: color-mix(in srgb, var(--primary) 65%, var(--surface-2)); }
+    .heatmap-day[data-level="4"] { background: var(--primary); }
+
+    .heatmap-tooltip {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface-3);
+      border: 1px solid var(--border-hover);
+      color: var(--text);
+      font-size: 11px;
+      padding: 5px 9px;
+      border-radius: 6px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      z-index: 10;
+    }
+
+    .heatmap-day:hover .heatmap-tooltip { opacity: 1; }
+
+    .heatmap-labels {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      margin-bottom: 6px;
+    }
+
+    .heatmap-labels span {
+      font-size: 10px;
+      color: var(--text-3);
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Sessions log ── */
+    .sessions-log {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 420px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .session-entry {
+      display: grid;
+      grid-template-columns: 36px 1fr auto;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 16px;
+      background: var(--surface-2);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      transition: border-color 0.2s;
+      animation: fadeInTask 0.2s ease;
+    }
+
+    .session-entry:hover { border-color: var(--border-hover); }
+
+    .session-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .session-icon.focus  { background: var(--primary-dim); color: var(--primary); }
+    .session-icon.short  { background: rgba(167,139,250,0.15); color: var(--accent-purple); }
+    .session-icon.long   { background: rgba(244,114,182,0.15); color: var(--accent-pink); }
+
+    .session-info .session-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .session-info .session-meta {
+      font-size: 11px;
+      color: var(--text-3);
+      display: flex;
+      gap: 10px;
+    }
+
+    .session-duration {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--primary);
+      white-space: nowrap;
+    }
+
+    /* ── Streak badge ── */
+    .streak-card {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .streak-number {
+      font-family: 'Syne', sans-serif;
+      font-size: 56px;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--accent-yellow);
+      filter: drop-shadow(0 0 12px rgba(251,191,36,0.4));
+    }
+
+    .streak-label {
+      font-size: 13px;
+      color: var(--text-2);
+      margin-top: 4px;
+    }
+
+    .streak-fire { font-size: 40px; }
+
+    /* ── Summary numbers ── */
+    .summary-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 0;
+    }
+
+    .summary-cell {
+      background: var(--surface-2);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      text-align: center;
+    }
+
+    .summary-cell .val {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .summary-cell .lbl {
+      font-size: 11px;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 2px;
+    }
+
+    /* ── Period selector ── */
+    .period-bar {
+      display: flex;
+      gap: 4px;
+      background: var(--surface-2);
+      border-radius: 10px;
+      padding: 3px;
+    }
+
+    .period-btn {
+      background: none;
+      border: none;
+      color: var(--text-2);
+      border-radius: 8px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .period-btn.active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ── Empty history ── */
+    .history-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-3);
+    }
+
+    .history-empty .icon { font-size: 36px; margin-bottom: 12px; }
+    .history-empty p { font-size: 13px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .history-grid { grid-template-columns: 1fr !important; }
+      .summary-row  { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 480px) {
+      .summary-row { grid-template-columns: 1fr 1fr; }
+      .streak-number { font-size: 40px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">⟁</span>
+      <span class="logo-text">FlowState</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="../index.html" class="nav-item">
+        <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
+      </a>
+      <a href="todo.html" class="nav-item">
+        <i class="fa-solid fa-list-check"></i><span>Tarefas</span>
+      </a>
+      <a href="pomodoro-history.html" class="nav-item active">
+        <i class="fa-solid fa-clock-rotate-left"></i><span>Pomodoro</span>
+      </a>
+      <a href="settings.html" class="nav-item">
+        <i class="fa-solid fa-sliders"></i><span>Configurações</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-avatar" id="user-avatar">F</div>
+      <div class="user-info">
+        <span class="user-name" id="sidebar-username">Usuário</span>
+        <span class="user-status">● Online</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Mobile header -->
+  <header class="mobile-header">
+    <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+    <span class="mobile-logo">⟁ FlowState</span>
+    <div class="mobile-avatar" id="mobile-avatar">F</div>
+  </header>
+
+  <main class="main-content">
+    <!-- Page header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Histórico Pomodoro</h1>
+        <p class="page-subtitle" id="history-subtitle">Carregando dados...</p>
+      </div>
+      <div class="header-actions">
+        <div class="period-bar">
+          <button class="period-btn active" data-days="7">7 dias</button>
+          <button class="period-btn" data-days="14">14 dias</button>
+          <button class="period-btn" data-days="30">30 dias</button>
+        </div>
+        <button class="btn-icon" id="btn-clear-history" title="Limpar histórico">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Top stats -->
+    <div class="stats-grid" style="margin-bottom: 24px;">
+      <div class="stat-card" data-animate>
+        <div class="stat-icon" style="--icon-color: #6ee7b7">
+          <i class="fa-solid fa-fire"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value" id="total-focus-time">0h</span>
+          <span class="stat-label">Tempo Total de Foco</span>
+        </div>
+      </div>
+      <div class="stat-card" data-animate>
+        <div class="stat-icon" style="--icon-color: #a78bfa">
+          <i class="fa-solid fa-rotate"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value" id="total-cycles">0</span>
+          <span class="stat-label">Ciclos Concluídos</span>
+        </div>
+      </div>
+      <div class="stat-card" data-animate>
+        <div class="stat-icon" style="--icon-color: #fbbf24">
+          <i class="fa-solid fa-calendar-check"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value" id="active-days">0</span>
+          <span class="stat-label">Dias Ativos</span>
+        </div>
+      </div>
+      <div class="stat-card" data-animate>
+        <div class="stat-icon" style="--icon-color: #f472b6">
+          <i class="fa-solid fa-trophy"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value" id="best-day-cycles">0</span>
+          <span class="stat-label">Melhor Dia (ciclos)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main grid -->
+    <div class="history-grid" style="display:grid; grid-template-columns: 1fr 340px; gap:20px; align-items:start;">
+
+      <!-- Left column -->
+      <div style="display:flex; flex-direction:column; gap:20px;">
+
+        <!-- Chart -->
+        <div class="card" data-animate>
+          <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-chart-bar"></i> Ciclos por Dia</h2>
+          </div>
+          <div class="chart-container">
+            <canvas id="history-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Heatmap -->
+        <div class="card" data-animate>
+          <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-grip"></i> Mapa de Atividade (últimas 4 semanas)</h2>
+          </div>
+          <div class="heatmap-labels" id="heatmap-labels"></div>
+          <div class="heatmap-grid" id="heatmap-grid"></div>
+          <div style="display:flex; align-items:center; gap:6px; margin-top:12px; font-size:11px; color:var(--text-3);">
+            <span>Menos</span>
+            <span style="width:12px;height:12px;border-radius:3px;background:var(--surface-2);display:inline-block"></span>
+            <span style="width:12px;height:12px;border-radius:3px;background:color-mix(in srgb,var(--primary) 25%,var(--surface-2));display:inline-block"></span>
+            <span style="width:12px;height:12px;border-radius:3px;background:color-mix(in srgb,var(--primary) 50%,var(--surface-2));display:inline-block"></span>
+            <span style="width:12px;height:12px;border-radius:3px;background:color-mix(in srgb,var(--primary) 75%,var(--surface-2));display:inline-block"></span>
+            <span style="width:12px;height:12px;border-radius:3px;background:var(--primary);display:inline-block"></span>
+            <span>Mais</span>
+          </div>
+        </div>
+
+        <!-- Session log -->
+        <div class="card" data-animate>
+          <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-list"></i> Sessões Recentes</h2>
+            <span id="session-count-badge" class="cycle-badge">0 sessões</span>
+          </div>
+          <div class="sessions-log" id="sessions-log">
+            <div class="history-empty">
+              <div class="icon">⏱️</div>
+              <p>Nenhuma sessão registrada ainda.<br>Inicie o Pomodoro no Dashboard!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div style="display:flex; flex-direction:column; gap:20px;">
+
+        <!-- Streak -->
+        <div class="card" data-animate>
+          <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-bolt"></i> Sequência</h2>
+          </div>
+          <div class="streak-card">
+            <span class="streak-fire" id="streak-fire">🔥</span>
+            <div>
+              <div class="streak-number" id="streak-count">0</div>
+              <div class="streak-label">dias consecutivos</div>
+            </div>
+          </div>
+          <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
+            <div class="summary-row">
+              <div class="summary-cell">
+                <div class="val" id="avg-cycles-day">0</div>
+                <div class="lbl">Ciclos/dia</div>
+              </div>
+              <div class="summary-cell">
+                <div class="val" id="avg-focus-day">0h</div>
+                <div class="lbl">Foco/dia</div>
+              </div>
+              <div class="summary-cell">
+                <div class="val" id="completion-rate">0%</div>
+                <div class="lbl">Consistência</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Distribution donut -->
+        <div class="card" data-animate>
+          <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-chart-pie"></i> Distribuição</h2>
+          </div>
+          <div class="chart-container" style="height:180px;">
+            <canvas id="donut-chart"></canvas>
+          </div>
+          <div id="donut-legend" style="display:flex; flex-direction:column; gap:8px; margin-top:16px;"></div>
+        </div>
+
+        <!-- Best sessions -->
+        <div class="card" data-animate>
+          <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-medal"></i> Top Dias</h2>
+          </div>
+          <div id="top-days-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Confirm clear modal -->
+  <div class="modal-overlay" id="confirm-clear-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Limpar histórico?</h3>
+        <button class="modal-close" id="close-clear-modal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p>Isso remove permanentemente todo o histórico de sessões Pomodoro. As tarefas não serão afetadas.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline" id="cancel-clear">Cancelar</button>
+        <button class="btn-danger" id="confirm-clear">Limpar histórico</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <script src="../js/main.js"></script>
+  <script src="../js/pomodoro-history.js"></script>
+</body>
+</html>
