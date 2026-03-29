@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="FlowState — Produtividade com propósito" />
+  <title>FlowState — Dashboard</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0a0a0f" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+  <link rel="stylesheet" href="css/themes.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">⟁</span>
+      <span class="logo-text">FlowState</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="index.html" class="nav-item active">
+        <i class="fa-solid fa-gauge-high"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="pages/todo.html" class="nav-item">
+        <i class="fa-solid fa-list-check"></i>
+        <span>Tarefas</span>
+      </a>
+      <a href="#" class="nav-item" id="nav-pomodoro">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <span>Pomodoro</span>
+      </a>
+      <a href="pages/settings.html" class="nav-item">
+        <i class="fa-solid fa-sliders"></i>
+        <span>Configurações</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-avatar" id="user-avatar">F</div>
+      <div class="user-info">
+        <span class="user-name" id="sidebar-username">Usuário</span>
+        <span class="user-status">● Online</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Mobile header -->
+  <header class="mobile-header">
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <span class="mobile-logo">⟁ FlowState</span>
+    <div class="mobile-avatar" id="mobile-avatar">F</div>
+  </header>
+
+  <!-- Main content -->
+  <main class="main-content">
+    <!-- Page header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle" id="greeting-text">Bom dia! Pronto para focar?</p>
+      </div>
+      <div class="header-actions">
+        <span class="date-badge" id="current-date"></span>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="stats-grid">
+      <div class="stat-card" data-animate>
+        <div class="stat-icon" style="--icon-color: #6ee7b7">
+          <i class="fa-solid fa-fire"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value" id="stat-focus">0h 00m</span>
+          <span class="stat-label">Tempo Focado</span>
+        </div>
+        <div class="stat-trend up" id="trend-focus">↑ hoje</div>
+      </div>
+
+      <div class="stat-card" data-animate>
+        <div class="stat-icon" style="--icon-color: #a78bfa">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value" id="stat-tasks">0</span>
+          <span class="stat-label">Tarefas Concluídas</span>
+        </div>
+        <div class="stat-trend" id="trend-tasks">hoje</div>
+      </div>
+
+      <div class="stat-card" data-animate>
+        <div class="stat-icon" style="--icon-color: #f472b6">
+          <i class="fa-solid fa-rotate"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value" id="stat-cycles">0</span>
+          <span class="stat-label">Ciclos Pomodoro</span>
+        </div>
+        <div class="stat-trend" id="trend-cycles">hoje</div>
+      </div>
+
+      <div class="stat-card" data-animate>
+        <div class="stat-icon" style="--icon-color: #fbbf24">
+          <i class="fa-solid fa-bullseye"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value" id="stat-goal">0%</span>
+          <span class="stat-label">Meta Diária</span>
+        </div>
+        <div class="stat-trend" id="trend-goal">progresso</div>
+      </div>
+    </div>
+
+    <!-- Content grid -->
+    <div class="content-grid">
+      <!-- Pomodoro widget -->
+      <div class="card pomodoro-widget" data-animate>
+        <div class="card-header">
+          <h2 class="card-title"><i class="fa-solid fa-clock"></i> Pomodoro</h2>
+          <span class="cycle-badge" id="cycle-count">Ciclo 1</span>
+        </div>
+
+        <div class="pomodoro-display">
+          <svg class="progress-ring" viewBox="0 0 200 200">
+            <circle class="ring-bg" cx="100" cy="100" r="88" />
+            <circle class="ring-progress" id="ring-progress" cx="100" cy="100" r="88"
+              stroke-dasharray="553" stroke-dashoffset="0" />
+          </svg>
+          <div class="timer-center">
+            <span class="timer-mode" id="timer-mode">FOCO</span>
+            <span class="timer-display" id="timer-display">25:00</span>
+          </div>
+        </div>
+
+        <div class="pomodoro-controls">
+          <button class="btn-icon" id="btn-reset" title="Resetar"><i class="fa-solid fa-rotate-left"></i></button>
+          <button class="btn-primary" id="btn-start"><i class="fa-solid fa-play"></i> Iniciar</button>
+          <button class="btn-icon" id="btn-skip" title="Pular"><i class="fa-solid fa-forward-step"></i></button>
+        </div>
+
+        <div class="pomodoro-sessions">
+          <span id="session-dots"></span>
+        </div>
+      </div>
+
+      <!-- Today's tasks preview -->
+      <div class="card tasks-preview" data-animate>
+        <div class="card-header">
+          <h2 class="card-title"><i class="fa-solid fa-list-check"></i> Tarefas de Hoje</h2>
+          <a href="pages/todo.html" class="card-link">Ver todas →</a>
+        </div>
+        <div class="tasks-list" id="dashboard-tasks">
+          <div class="empty-state-small">
+            <i class="fa-regular fa-clipboard"></i>
+            <span>Nenhuma tarefa ainda</span>
+          </div>
+        </div>
+        <a href="pages/todo.html" class="btn-outline full-width">+ Adicionar tarefa</a>
+      </div>
+
+      <!-- Daily goals -->
+      <div class="card goals-card" data-animate>
+        <div class="card-header">
+          <h2 class="card-title"><i class="fa-solid fa-trophy"></i> Metas do Dia</h2>
+          <button class="btn-icon-sm" id="btn-edit-goals" title="Editar metas"><i class="fa-solid fa-pen"></i></button>
+        </div>
+
+        <div class="goals-list" id="goals-list">
+          <!-- Goals rendered by JS -->
+        </div>
+
+        <div class="goals-overall">
+          <div class="goals-bar-label">
+            <span>Progresso geral</span>
+            <span id="goals-percent">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="goals-fill" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="card chart-card" data-animate>
+        <div class="card-header">
+          <h2 class="card-title"><i class="fa-solid fa-chart-line"></i> Produtividade</h2>
+          <div class="chart-tabs">
+            <button class="tab-btn active" data-period="week">Semana</button>
+            <button class="tab-btn" data-period="month">Mês</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="productivity-chart"></canvas>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Goals edit modal -->
+  <div class="modal-overlay" id="goals-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Editar Metas do Dia</h3>
+        <button class="modal-close" id="close-goals-modal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Meta de tarefas</label>
+          <input type="number" id="goal-tasks" min="1" max="50" value="5" />
+        </div>
+        <div class="form-group">
+          <label>Meta de ciclos Pomodoro</label>
+          <input type="number" id="goal-cycles" min="1" max="20" value="4" />
+        </div>
+        <div class="form-group">
+          <label>Meta de horas focadas</label>
+          <input type="number" id="goal-hours" min="1" max="12" value="2" step="0.5" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline" id="cancel-goals">Cancelar</button>
+        <button class="btn-primary" id="save-goals">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar overlay for mobile -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <script src="js/main.js"></script>
+  <script src="js/pomodoro.js"></script>
+  <script src="js/charts.js"></script>
+  <script>
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+  </script>
+</body>
+</html>

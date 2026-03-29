@@ -1,0 +1,124 @@
+/* ============================================================
+   FlowState — Themes
+   Three themes: dark (default), light, custom
+   ============================================================ */
+
+/* ─── DARK THEME (default) ─── */
+[data-theme="dark"] {
+  --bg: #0a0a0f;
+  --bg-2: #0f0f1a;
+  --surface: #13131f;
+  --surface-2: #1a1a2e;
+  --surface-3: #20203a;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-hover: rgba(255, 255, 255, 0.15);
+
+  --text: #e8e8f0;
+  --text-2: #9292b0;
+  --text-3: #5c5c7a;
+  --text-inv: #0a0a0f;
+
+  --primary: #6ee7b7;
+  --primary-dim: rgba(110, 231, 183, 0.15);
+  --primary-glow: rgba(110, 231, 183, 0.3);
+
+  --accent-purple: #a78bfa;
+  --accent-pink: #f472b6;
+  --accent-yellow: #fbbf24;
+  --accent-red: #f87171;
+  --accent-blue: #60a5fa;
+
+  --success: #6ee7b7;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --info: #60a5fa;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.6);
+
+  --sidebar-w: 240px;
+  --radius: 12px;
+  --radius-lg: 20px;
+  --transition: 0.2s ease;
+}
+
+/* ─── LIGHT THEME ─── */
+[data-theme="light"] {
+  --bg: #f4f4f8;
+  --bg-2: #eaeaf0;
+  --surface: #ffffff;
+  --surface-2: #f8f8fc;
+  --surface-3: #ededf5;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-hover: rgba(0, 0, 0, 0.16);
+
+  --text: #1a1a2e;
+  --text-2: #5c5c7a;
+  --text-3: #9292b0;
+  --text-inv: #ffffff;
+
+  --primary: #059669;
+  --primary-dim: rgba(5, 150, 105, 0.12);
+  --primary-glow: rgba(5, 150, 105, 0.25);
+
+  --accent-purple: #7c3aed;
+  --accent-pink: #db2777;
+  --accent-yellow: #d97706;
+  --accent-red: #dc2626;
+  --accent-blue: #2563eb;
+
+  --success: #059669;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --info: #2563eb;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.15);
+
+  --sidebar-w: 240px;
+  --radius: 12px;
+  --radius-lg: 20px;
+  --transition: 0.2s ease;
+}
+
+/* ─── CUSTOM THEME ─── */
+[data-theme="custom"] {
+  --bg: var(--custom-bg, #0a0a0f);
+  --bg-2: color-mix(in srgb, var(--custom-bg, #0a0a0f) 80%, white 20%);
+  --surface: var(--custom-surface, #13131f);
+  --surface-2: color-mix(in srgb, var(--custom-surface, #13131f) 80%, white 20%);
+  --surface-3: color-mix(in srgb, var(--custom-surface, #13131f) 60%, white 40%);
+  --border: rgba(255, 255, 255, 0.07);
+  --border-hover: rgba(255, 255, 255, 0.15);
+
+  --text: #e8e8f0;
+  --text-2: #9292b0;
+  --text-3: #5c5c7a;
+  --text-inv: #0a0a0f;
+
+  --primary: var(--custom-primary, #6ee7b7);
+  --primary-dim: color-mix(in srgb, var(--custom-primary, #6ee7b7) 20%, transparent);
+  --primary-glow: color-mix(in srgb, var(--custom-primary, #6ee7b7) 35%, transparent);
+
+  --accent-purple: #a78bfa;
+  --accent-pink: #f472b6;
+  --accent-yellow: #fbbf24;
+  --accent-red: #f87171;
+  --accent-blue: #60a5fa;
+
+  --success: var(--custom-primary, #6ee7b7);
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --info: #60a5fa;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.6);
+
+  --sidebar-w: 240px;
+  --radius: 12px;
+  --radius-lg: 20px;
+  --transition: 0.2s ease;
+}

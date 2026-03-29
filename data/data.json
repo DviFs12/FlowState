@@ -1,0 +1,48 @@
+{
+  "_comment": "FlowState — estrutura de dados de referência. Os dados reais ficam no localStorage.",
+  "tasks": [
+    {
+      "id": "_example1",
+      "text": "Revisar relatório semanal",
+      "note": "Checar métricas de Q1",
+      "priority": "high",
+      "category": "work",
+      "due": "",
+      "done": false,
+      "createdAt": "2025-01-01T08:00:00.000Z",
+      "doneAt": null
+    },
+    {
+      "id": "_example2",
+      "text": "Estudar JavaScript avançado",
+      "note": "",
+      "priority": "medium",
+      "category": "study",
+      "due": "",
+      "done": true,
+      "createdAt": "2025-01-01T09:00:00.000Z",
+      "doneAt": "2025-01-01T11:00:00.000Z"
+    }
+  ],
+  "settings": {
+    "username": "Usuário",
+    "avatar": "🚀",
+    "theme": "dark",
+    "pomodoroFocus": 25,
+    "pomodoroShort": 5,
+    "pomodoroLong": 15,
+    "pomodoroCycles": 4,
+    "pomodoroNotify": true,
+    "pomodoroSound": true,
+    "dailyGoals": {
+      "tasks": 5,
+      "cycles": 4,
+      "hours": 2
+    }
+  },
+  "stats_2025-01-01": {
+    "focusSeconds": 3600,
+    "tasksCompleted": 3,
+    "pomoCycles": 4
+  }
+}

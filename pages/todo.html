@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlowState — Tarefas</title>
+  <link rel="manifest" href="../manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/themes.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">⟁</span>
+      <span class="logo-text">FlowState</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="../index.html" class="nav-item">
+        <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
+      </a>
+      <a href="todo.html" class="nav-item active">
+        <i class="fa-solid fa-list-check"></i><span>Tarefas</span>
+      </a>
+      <a href="../index.html#pomodoro" class="nav-item">
+        <i class="fa-solid fa-clock-rotate-left"></i><span>Pomodoro</span>
+      </a>
+      <a href="settings.html" class="nav-item">
+        <i class="fa-solid fa-sliders"></i><span>Configurações</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-avatar" id="user-avatar">F</div>
+      <div class="user-info">
+        <span class="user-name" id="sidebar-username">Usuário</span>
+        <span class="user-status">● Online</span>
+      </div>
+    </div>
+  </aside>
+
+  <header class="mobile-header">
+    <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+    <span class="mobile-logo">⟁ FlowState</span>
+    <div class="mobile-avatar" id="mobile-avatar">F</div>
+  </header>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Tarefas</h1>
+        <p class="page-subtitle" id="tasks-summary">0 pendentes · 0 concluídas</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-primary" id="btn-add-task">
+          <i class="fa-solid fa-plus"></i> Nova Tarefa
+        </button>
+      </div>
+    </div>
+
+    <!-- Add task inline -->
+    <div class="add-task-panel" id="add-task-panel" style="display:none">
+      <div class="card">
+        <div class="form-row">
+          <input type="text" id="task-input" class="task-input-field" placeholder="Nome da tarefa..." maxlength="120" />
+          <select id="task-priority" class="task-select">
+            <option value="low">🟢 Baixa</option>
+            <option value="medium" selected>🟡 Média</option>
+            <option value="high">🔴 Alta</option>
+          </select>
+          <select id="task-category" class="task-select">
+            <option value="personal">👤 Pessoal</option>
+            <option value="work">💼 Trabalho</option>
+            <option value="study">📚 Estudo</option>
+            <option value="health">❤️ Saúde</option>
+            <option value="other">📌 Outro</option>
+          </select>
+          <input type="date" id="task-due" class="task-select" />
+        </div>
+        <div class="form-row form-row--actions">
+          <input type="text" id="task-note" class="task-input-field" placeholder="Nota (opcional)..." maxlength="200" />
+          <button class="btn-primary" id="btn-save-task">Adicionar</button>
+          <button class="btn-outline" id="btn-cancel-task">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+      <div class="filter-tabs">
+        <button class="filter-btn active" data-filter="all">Todas</button>
+        <button class="filter-btn" data-filter="pending">Pendentes</button>
+        <button class="filter-btn" data-filter="done">Concluídas</button>
+      </div>
+      <div class="filter-extras">
+        <select id="filter-category" class="task-select small">
+          <option value="">Todas categorias</option>
+          <option value="personal">👤 Pessoal</option>
+          <option value="work">💼 Trabalho</option>
+          <option value="study">📚 Estudo</option>
+          <option value="health">❤️ Saúde</option>
+          <option value="other">📌 Outro</option>
+        </select>
+        <select id="filter-priority" class="task-select small">
+          <option value="">Todas prioridades</option>
+          <option value="high">🔴 Alta</option>
+          <option value="medium">🟡 Média</option>
+          <option value="low">🟢 Baixa</option>
+        </select>
+        <button class="btn-icon-sm" id="btn-clear-done" title="Limpar concluídas">
+          <i class="fa-solid fa-broom"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Tasks container -->
+    <div class="tasks-container" id="tasks-container">
+      <!-- Tasks rendered by todo.js -->
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty-state" id="empty-state" style="display:none">
+      <div class="empty-icon">📋</div>
+      <h3>Nenhuma tarefa encontrada</h3>
+      <p>Crie sua primeira tarefa e comece a focar no que importa.</p>
+      <button class="btn-primary" onclick="document.getElementById('btn-add-task').click()">
+        + Criar tarefa
+      </button>
+    </div>
+  </main>
+
+  <!-- Edit task modal -->
+  <div class="modal-overlay" id="edit-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Editar Tarefa</h3>
+        <button class="modal-close" id="close-edit-modal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-task-id" />
+        <div class="form-group">
+          <label>Tarefa</label>
+          <input type="text" id="edit-task-text" maxlength="120" />
+        </div>
+        <div class="form-group">
+          <label>Nota</label>
+          <input type="text" id="edit-task-note" maxlength="200" placeholder="Opcional..." />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Prioridade</label>
+            <select id="edit-task-priority">
+              <option value="low">🟢 Baixa</option>
+              <option value="medium">🟡 Média</option>
+              <option value="high">🔴 Alta</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Categoria</label>
+            <select id="edit-task-category">
+              <option value="personal">👤 Pessoal</option>
+              <option value="work">💼 Trabalho</option>
+              <option value="study">📚 Estudo</option>
+              <option value="health">❤️ Saúde</option>
+              <option value="other">📌 Outro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Data</label>
+            <input type="date" id="edit-task-due" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline" id="cancel-edit">Cancelar</button>
+        <button class="btn-primary" id="save-edit">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <script src="../js/main.js"></script>
+  <script src="../js/todo.js"></script>
+</body>
+</html>

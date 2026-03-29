@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlowState — Configurações</title>
+  <link rel="manifest" href="../manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/themes.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">⟁</span>
+      <span class="logo-text">FlowState</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="../index.html" class="nav-item"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
+      <a href="todo.html" class="nav-item"><i class="fa-solid fa-list-check"></i><span>Tarefas</span></a>
+      <a href="../index.html" class="nav-item"><i class="fa-solid fa-clock-rotate-left"></i><span>Pomodoro</span></a>
+      <a href="settings.html" class="nav-item active"><i class="fa-solid fa-sliders"></i><span>Configurações</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-avatar" id="user-avatar">F</div>
+      <div class="user-info">
+        <span class="user-name" id="sidebar-username">Usuário</span>
+        <span class="user-status">● Online</span>
+      </div>
+    </div>
+  </aside>
+
+  <header class="mobile-header">
+    <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+    <span class="mobile-logo">⟁ FlowState</span>
+    <div class="mobile-avatar" id="mobile-avatar">F</div>
+  </header>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Configurações</h1>
+        <p class="page-subtitle">Personalize sua experiência</p>
+      </div>
+    </div>
+
+    <div class="settings-grid">
+
+      <!-- Perfil -->
+      <div class="card settings-section" data-animate>
+        <div class="settings-section-title">
+          <i class="fa-solid fa-user-circle"></i> Perfil
+        </div>
+        <div class="form-group">
+          <label>Nome de usuário</label>
+          <input type="text" id="setting-username" placeholder="Seu nome..." maxlength="30" />
+        </div>
+        <div class="form-group">
+          <label>Avatar (emoji ou letra)</label>
+          <div class="avatar-picker">
+            <input type="text" id="setting-avatar" maxlength="2" placeholder="F" />
+            <div class="avatar-presets">
+              <span data-avatar="🚀">🚀</span>
+              <span data-avatar="⚡">⚡</span>
+              <span data-avatar="🎯">🎯</span>
+              <span data-avatar="🔥">🔥</span>
+              <span data-avatar="💎">💎</span>
+              <span data-avatar="🌙">🌙</span>
+            </div>
+          </div>
+        </div>
+        <button class="btn-primary" id="save-profile">Salvar Perfil</button>
+      </div>
+
+      <!-- Tema -->
+      <div class="card settings-section" data-animate>
+        <div class="settings-section-title">
+          <i class="fa-solid fa-palette"></i> Aparência
+        </div>
+        <div class="form-group">
+          <label>Tema</label>
+          <div class="theme-picker">
+            <label class="theme-option" data-theme-opt="dark">
+              <input type="radio" name="theme" value="dark" />
+              <div class="theme-preview theme-dark-prev">
+                <span></span><span></span><span></span>
+              </div>
+              <span>Dark</span>
+            </label>
+            <label class="theme-option" data-theme-opt="light">
+              <input type="radio" name="theme" value="light" />
+              <div class="theme-preview theme-light-prev">
+                <span></span><span></span><span></span>
+              </div>
+              <span>Light</span>
+            </label>
+            <label class="theme-option" data-theme-opt="custom">
+              <input type="radio" name="theme" value="custom" />
+              <div class="theme-preview theme-custom-prev" id="custom-prev">
+                <span></span><span></span><span></span>
+              </div>
+              <span>Custom</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="custom-colors" id="custom-colors">
+          <div class="form-group">
+            <label>Cor primária</label>
+            <div class="color-row">
+              <input type="color" id="color-primary" value="#6ee7b7" />
+              <input type="text" id="color-primary-text" value="#6ee7b7" maxlength="7" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Cor de fundo</label>
+            <div class="color-row">
+              <input type="color" id="color-bg" value="#0a0a0f" />
+              <input type="text" id="color-bg-text" value="#0a0a0f" maxlength="7" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Cor de superfície</label>
+            <div class="color-row">
+              <input type="color" id="color-surface" value="#13131f" />
+              <input type="text" id="color-surface-text" value="#13131f" maxlength="7" />
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="save-theme">Aplicar Tema</button>
+      </div>
+
+      <!-- Pomodoro -->
+      <div class="card settings-section" data-animate>
+        <div class="settings-section-title">
+          <i class="fa-solid fa-clock"></i> Pomodoro
+        </div>
+        <div class="form-group">
+          <label>Duração do foco (minutos)</label>
+          <div class="range-group">
+            <input type="range" id="pomo-focus" min="5" max="90" step="5" value="25" />
+            <span class="range-value" id="pomo-focus-val">25 min</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Pausa curta (minutos)</label>
+          <div class="range-group">
+            <input type="range" id="pomo-short" min="1" max="30" step="1" value="5" />
+            <span class="range-value" id="pomo-short-val">5 min</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Pausa longa (minutos)</label>
+          <div class="range-group">
+            <input type="range" id="pomo-long" min="5" max="60" step="5" value="15" />
+            <span class="range-value" id="pomo-long-val">15 min</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Ciclos até pausa longa</label>
+          <div class="range-group">
+            <input type="range" id="pomo-cycles" min="2" max="8" step="1" value="4" />
+            <span class="range-value" id="pomo-cycles-val">4 ciclos</span>
+          </div>
+        </div>
+        <div class="form-group toggle-group">
+          <label>Notificações do browser</label>
+          <label class="toggle">
+            <input type="checkbox" id="pomo-notify" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="form-group toggle-group">
+          <label>Som de alerta</label>
+          <label class="toggle">
+            <input type="checkbox" id="pomo-sound" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <button class="btn-primary" id="save-pomodoro">Salvar</button>
+      </div>
+
+      <!-- Dados -->
+      <div class="card settings-section" data-animate>
+        <div class="settings-section-title">
+          <i class="fa-solid fa-database"></i> Dados
+        </div>
+
+        <div class="data-actions">
+          <div class="data-action-item">
+            <div>
+              <strong>Exportar dados</strong>
+              <p>Salve um backup completo dos seus dados.</p>
+            </div>
+            <button class="btn-outline" id="btn-export">
+              <i class="fa-solid fa-download"></i> Exportar
+            </button>
+          </div>
+
+          <div class="data-action-item">
+            <div>
+              <strong>Importar dados</strong>
+              <p>Restaure dados de um backup anterior.</p>
+            </div>
+            <label class="btn-outline" style="cursor:pointer">
+              <i class="fa-solid fa-upload"></i> Importar
+              <input type="file" id="btn-import" accept=".json" style="display:none" />
+            </label>
+          </div>
+
+          <div class="data-action-item danger">
+            <div>
+              <strong>Resetar todos os dados</strong>
+              <p>Remove permanentemente todas as tarefas e histórico.</p>
+            </div>
+            <button class="btn-danger" id="btn-reset">
+              <i class="fa-solid fa-trash"></i> Resetar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sobre -->
+      <div class="card settings-section about-card" data-animate>
+        <div class="settings-section-title">
+          <i class="fa-solid fa-circle-info"></i> Sobre
+        </div>
+        <div class="about-content">
+          <div class="about-logo">⟁</div>
+          <h3>FlowState</h3>
+          <p>Produtividade com propósito</p>
+          <div class="about-version">v1.0.0</div>
+          <div class="about-features">
+            <span>✓ 100% offline</span>
+            <span>✓ Sem rastreamento</span>
+            <span>✓ Dados locais</span>
+            <span>✓ Open Source</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Confirm modal -->
+  <div class="modal-overlay" id="confirm-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Confirmar ação</h3>
+        <button class="modal-close" id="close-confirm"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-message">Tem certeza que deseja resetar todos os dados? Esta ação não pode ser desfeita.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline" id="cancel-confirm">Cancelar</button>
+        <button class="btn-danger" id="confirm-action">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <script src="../js/main.js"></script>
+  <script src="../js/settings.js"></script>
+</body>
+</html>
