@@ -1,24 +1,22 @@
 {
   "name": "FlowState — Produtividade",
   "short_name": "FlowState",
-  "description": "Produtividade com propósito. Pomodoro, tarefas e metas.",
-  "start_url": "/",
+  "description": "Produtividade com propósito. Pomodoro, tarefas, cronograma e metas.",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#0a0a0f",
   "theme_color": "#0a0a0f",
   "orientation": "portrait-primary",
-  "icons": [
-    {
-      "src": "icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ],
   "categories": ["productivity", "utilities"],
-  "lang": "pt-BR"
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    { "name": "Tarefas",    "url": "./pages/todo.html",     "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Cronograma", "url": "./pages/schedule.html", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
 }

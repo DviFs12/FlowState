@@ -1480,3 +1480,131 @@ input[type="range"]::-webkit-slider-thumb {
   color: var(--primary);
   font-weight: 700;
 }
+
+/* ─── SCHEDULE BANNER (dashboard) ─── */
+.schedule-banner {
+  margin-bottom: 0;
+}
+
+.schedule-banner-inner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.schedule-banner .card-link {
+  flex-shrink: 0;
+}
+
+.schedule-banner.card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+}
+
+.schedule-now,
+.schedule-next {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.sched-pill {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+.sched-pill--now  { background: var(--primary-dim);            color: var(--primary); }
+.sched-pill--next { background: rgba(167,139,250,0.15);        color: var(--accent-purple); }
+
+.sched-activity {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.sched-time {
+  font-size: 12px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.schedule-divider {
+  width: 1px;
+  height: 32px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+/* Day strip */
+.schedule-today-strip {
+  flex: 1;
+  min-width: 120px;
+}
+
+.day-strip-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.day-strip-bar {
+  position: relative;
+  height: 14px;
+  background: var(--surface-2);
+  border-radius: 4px;
+  overflow: visible;
+}
+
+.strip-block {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 3px;
+}
+
+.strip-now {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 20px;
+  background: var(--accent-red);
+  border-radius: 2px;
+}
+
+.day-strip-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: var(--text-3);
+}
+
+/* Responsive banner */
+@media (max-width: 768px) {
+  .schedule-banner-inner {
+    gap: 12px;
+  }
+  .schedule-divider { display: none; }
+  .sched-activity { max-width: 130px; }
+  .schedule-today-strip { min-width: 100%; order: 10; }
+}
+
+@media (max-width: 480px) {
+  .schedule-banner.card { padding: 12px 16px; flex-direction: column; align-items: flex-start; }
+  .sched-activity { max-width: 160px; }
+}
