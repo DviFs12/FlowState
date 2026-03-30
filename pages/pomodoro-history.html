@@ -235,6 +235,9 @@
       .streak-number { font-size: 40px; }
     }
   </style>
+  <!-- Supabase — deve vir antes de qualquer script do app -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="/api/env.js"></script>
 </head>
 <body>
   <!-- Sidebar -->
@@ -459,7 +462,11 @@
 
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
+  <script src="../js/supabase.js"></script>
   <script src="../js/main.js"></script>
   <script src="../js/pomodoro-history.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => Auth.init());
+  </script>
 </body>
 </html>

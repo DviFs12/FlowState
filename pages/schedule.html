@@ -81,6 +81,9 @@
       .wg-day-col, .wg-cell { font-size:9px; }
     }
   </style>
+  <!-- Supabase — deve vir antes de qualquer script do app -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="/api/env.js"></script>
 </head>
 <body>
   <aside class="sidebar" id="sidebar">
@@ -259,7 +262,11 @@
   </div>
 
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
+  <script src="../js/supabase.js"></script>
   <script src="../js/main.js"></script>
   <script src="../js/schedule.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => Auth.init());
+  </script>
 </body>
 </html>

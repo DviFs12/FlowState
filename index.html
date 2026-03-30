@@ -19,6 +19,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <!-- Supabase — deve vir antes de qualquer script do app -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="/api/env.js"></script>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <link rel="stylesheet" href="css/themes.css" />
   <link rel="stylesheet" href="css/style.css" />
@@ -205,17 +209,16 @@
 
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
+  <script src="js/supabase.js"></script>
   <script src="js/main.js"></script>
   <script src="js/pomodoro.js"></script>
   <script src="js/charts.js"></script>
   <script src="js/schedule-banner.js"></script>
-  <script src="/api/env.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/js/supabase.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
+    document.addEventListener('DOMContentLoaded', () => Auth.init());
   </script>
 </body>
 </html>
