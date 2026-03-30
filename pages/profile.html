@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlowState — Perfil</title>
+  <link rel="manifest" href="../manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+  <link rel="icon" type="image/x-icon" href="../favicon.ico" />
+  <link rel="apple-touch-icon" href="../icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <!-- Supabase UMD — deve vir antes de qualquer script do app -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <!-- Env vars injetadas pela Vercel serverless function -->
+  <script src="/api/env.js"></script>
+  <link rel="stylesheet" href="../css/themes.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* ── Avatar card ── */
+    .avatar-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 32px 24px;
+    }
+
+    .avatar-big {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--primary-dim);
+      border: 2px solid var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      color: var(--primary);
+      filter: drop-shadow(0 0 12px var(--primary-glow));
+    }
+
+    .profile-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .profile-email {
+      font-size: 13px;
+      color: var(--text-2);
+      text-align: center;
+      word-break: break-all;
+    }
+
+    /* ── Status badge ── */
+    .sync-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .sync-status.connected {
+      background: rgba(110,231,183,0.12);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+
+    .sync-status.offline {
+      background: rgba(251,191,36,0.12);
+      color: var(--accent-yellow);
+      border: 1px solid var(--accent-yellow);
+    }
+
+    .sync-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* ── Info rows ── */
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+
+    .info-row:last-child { border-bottom: none; }
+
+    .info-label {
+      color: var(--text-2);
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .info-label i { width: 16px; text-align: center; color: var(--primary); }
+
+    .info-value {
+      font-weight: 500;
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      max-width: 260px;
+      text-align: right;
+      word-break: break-all;
+      color: var(--text);
+    }
+
+    .info-value.mono {
+      font-family: 'DM Mono', 'Courier New', monospace;
+      font-size: 11px;
+      color: var(--text-2);
+    }
+
+    /* ── Edit form ── */
+    .profile-section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-2);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .profile-section-title i { color: var(--primary); }
+
+    /* ── Danger zone ── */
+    .danger-zone {
+      border: 1px solid rgba(248,113,113,0.3);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-top: 4px;
+    }
+
+    .danger-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--danger);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .danger-desc {
+      font-size: 12px;
+      color: var(--text-2);
+      margin-bottom: 14px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .profile-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><span class="logo-icon">⟁</span><span class="logo-text">FlowState</span></div>
+    <nav class="sidebar-nav">
+      <a href="../index.html" class="nav-item"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
+      <a href="todo.html" class="nav-item"><i class="fa-solid fa-list-check"></i><span>Tarefas</span></a>
+      <a href="pomodoro-history.html" class="nav-item"><i class="fa-solid fa-clock-rotate-left"></i><span>Pomodoro</span></a>
+      <a href="schedule.html" class="nav-item"><i class="fa-solid fa-calendar-days"></i><span>Cronograma</span></a>
+      <a href="settings.html" class="nav-item"><i class="fa-solid fa-sliders"></i><span>Configurações</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-avatar" id="user-avatar">F</div>
+      <div class="user-info">
+        <span class="user-name" id="sidebar-username">Usuário</span>
+        <span class="user-status">● Online</span>
+      </div>
+    </div>
+  </aside>
+
+  <header class="mobile-header">
+    <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+    <span class="mobile-logo">⟁ FlowState</span>
+    <div class="mobile-avatar" id="mobile-avatar">F</div>
+  </header>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Perfil</h1>
+        <p class="page-subtitle">Sua conta e status de sincronização</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-danger" id="btn-logout">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> Sair
+        </button>
+      </div>
+    </div>
+
+    <div class="profile-grid">
+
+      <!-- Left: avatar + status -->
+      <div style="display:flex; flex-direction:column; gap:20px;">
+
+        <!-- Avatar card -->
+        <div class="card avatar-card" data-animate>
+          <div class="avatar-big" id="profile-avatar-big">F</div>
+          <div class="profile-name" id="profile-display-name">Usuário</div>
+          <div class="profile-email" id="profile-email-display">—</div>
+
+          <!-- Sync status badge -->
+          <div class="sync-status" id="sync-status-badge">
+            <span class="sync-dot"></span>
+            <span id="sync-status-text">Verificando…</span>
+          </div>
+        </div>
+
+        <!-- Sync info -->
+        <div class="card" data-animate>
+          <div class="profile-section-title">
+            <i class="fa-solid fa-rotate"></i> Sincronização
+          </div>
+          <div class="info-row">
+            <span class="info-label"><i class="fa-solid fa-cloud"></i> Supabase</span>
+            <span class="info-value" id="sync-db-status">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label"><i class="fa-solid fa-clock"></i> Última sync</span>
+            <span class="info-value" id="sync-last-time">Nunca</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label"><i class="fa-solid fa-list-check"></i> Tarefas salvas</span>
+            <span class="info-value" id="sync-tasks-count">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label"><i class="fa-solid fa-calendar-days"></i> Blocos de agenda</span>
+            <span class="info-value" id="sync-schedule-count">—</span>
+          </div>
+          <div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn-primary" id="btn-sync-now" style="flex:1">
+              <i class="fa-solid fa-rotate"></i> Sincronizar agora
+            </button>
+            <button class="btn-outline" id="btn-pull-now" style="flex:1">
+              <i class="fa-solid fa-cloud-arrow-down"></i> Restaurar da nuvem
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right: account details + edit -->
+      <div style="display:flex; flex-direction:column; gap:20px;">
+
+        <!-- Account info -->
+        <div class="card" data-animate>
+          <div class="profile-section-title">
+            <i class="fa-solid fa-circle-info"></i> Informações da Conta
+          </div>
+          <div class="info-row">
+            <span class="info-label"><i class="fa-solid fa-envelope"></i> E-mail</span>
+            <span class="info-value" id="info-email">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label"><i class="fa-solid fa-fingerprint"></i> User ID</span>
+            <span class="info-value mono" id="info-uid">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label"><i class="fa-solid fa-calendar-plus"></i> Criado em</span>
+            <span class="info-value" id="info-created">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label"><i class="fa-solid fa-key"></i> Provedor</span>
+            <span class="info-value" id="info-provider">—</span>
+          </div>
+        </div>
+
+        <!-- Edit profile -->
+        <div class="card" data-animate>
+          <div class="profile-section-title">
+            <i class="fa-solid fa-pen"></i> Editar Perfil
+          </div>
+          <div class="form-group">
+            <label>Nome de exibição</label>
+            <input type="text" id="edit-username" maxlength="30" placeholder="Como quer ser chamado?" />
+          </div>
+          <div class="form-group">
+            <label>Avatar (emoji ou letra)</label>
+            <div style="display:flex; gap:8px; align-items:center">
+              <input type="text" id="edit-avatar" maxlength="2" style="width:60px; font-size:20px; text-align:center" />
+              <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <span class="avatar-preset" data-av="🚀" style="font-size:20px; cursor:pointer; padding:4px; border-radius:6px">🚀</span>
+                <span class="avatar-preset" data-av="⚡" style="font-size:20px; cursor:pointer; padding:4px; border-radius:6px">⚡</span>
+                <span class="avatar-preset" data-av="🎯" style="font-size:20px; cursor:pointer; padding:4px; border-radius:6px">🎯</span>
+                <span class="avatar-preset" data-av="🔥" style="font-size:20px; cursor:pointer; padding:4px; border-radius:6px">🔥</span>
+                <span class="avatar-preset" data-av="💎" style="font-size:20px; cursor:pointer; padding:4px; border-radius:6px">💎</span>
+                <span class="avatar-preset" data-av="🌙" style="font-size:20px; cursor:pointer; padding:4px; border-radius:6px">🌙</span>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:4px; display:flex; gap:8px;">
+            <button class="btn-primary" id="btn-save-profile">Salvar alterações</button>
+          </div>
+        </div>
+
+        <!-- Change password (only for email provider) -->
+        <div class="card" id="change-password-card" data-animate style="display:none">
+          <div class="profile-section-title">
+            <i class="fa-solid fa-lock"></i> Alterar Senha
+          </div>
+          <div class="form-group">
+            <label>Nova senha (mínimo 8 caracteres)</label>
+            <input type="password" id="new-password" placeholder="••••••••" autocomplete="new-password" />
+          </div>
+          <div class="form-group">
+            <label>Confirmar nova senha</label>
+            <input type="password" id="confirm-password" placeholder="••••••••" autocomplete="new-password" />
+          </div>
+          <button class="btn-outline" id="btn-change-password">Atualizar senha</button>
+        </div>
+
+        <!-- Danger zone -->
+        <div class="card" data-animate>
+          <div class="profile-section-title" style="color:var(--danger)">
+            <i class="fa-solid fa-triangle-exclamation"></i> Zona de Risco
+          </div>
+          <div class="danger-zone">
+            <div class="danger-title"><i class="fa-solid fa-trash"></i> Apagar dados locais</div>
+            <div class="danger-desc">Remove todos os dados do localStorage deste dispositivo. Dados na nuvem não são afetados.</div>
+            <button class="btn-outline" id="btn-clear-local" style="border-color:var(--danger); color:var(--danger)">
+              Limpar dados locais
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Scripts: main.js primeiro (define Store), supabase.js depois (patcha Store) -->
+  <script src="../js/main.js"></script>
+  <script src="../js/supabase.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1. Inicializa auth (redireciona se não autenticado)
+      await Auth.init();
+
+      // Se chegou aqui, usuário está autenticado
+      const user = Auth.user;
+      if (!user) return; // proteção extra — Auth.init já redirecionou
+
+      // 2. Popula dados da conta
+      _fillAccountInfo(user);
+
+      // 3. Carrega dados de perfil do localStorage (já sincronizados pelo Sync.pull)
+      _loadProfileForm();
+
+      // 4. Atualiza status de sincronização
+      _updateSyncStatus();
+    });
+
+    /* ─── PREENCHE INFORMAÇÕES DA CONTA ─── */
+    function _fillAccountInfo(user) {
+      // Avatar grande
+      const settings  = Store.get('settings', {});
+      const avatarStr = settings.avatar || user.email?.charAt(0).toUpperCase() || 'F';
+      const nameStr   = settings.username || user.email?.split('@')[0] || 'Usuário';
+
+      document.getElementById('profile-avatar-big').textContent  = avatarStr;
+      document.getElementById('profile-display-name').textContent = nameStr;
+      document.getElementById('profile-email-display').textContent = user.email || '—';
+
+      // Info rows
+      document.getElementById('info-email').textContent    = user.email || '—';
+      document.getElementById('info-uid').textContent      = user.id    || '—';
+
+      const createdAt = user.created_at
+        ? new Date(user.created_at).toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })
+        : '—';
+      document.getElementById('info-created').textContent = createdAt;
+
+      // Provider (email/google/github…)
+      const provider = user.app_metadata?.provider || user.identities?.[0]?.provider || 'email';
+      document.getElementById('info-provider').textContent = provider.charAt(0).toUpperCase() + provider.slice(1);
+
+      // Show password change only for email provider
+      if (provider === 'email') {
+        document.getElementById('change-password-card').style.display = 'block';
+      }
+    }
+
+    /* ─── CARREGA FORM DE PERFIL ─── */
+    function _loadProfileForm() {
+      const settings = Store.get('settings', {});
+      const usernameInput = document.getElementById('edit-username');
+      const avatarInput   = document.getElementById('edit-avatar');
+      if (usernameInput) usernameInput.value = settings.username || '';
+      if (avatarInput)   avatarInput.value   = settings.avatar   || '';
+    }
+
+    /* ─── STATUS DE SINCRONIZAÇÃO ─── */
+    function _updateSyncStatus() {
+      const isConnected = !!window.supabaseClient;
+      const badge       = document.getElementById('sync-status-badge');
+      const statusText  = document.getElementById('sync-status-text');
+      const dbStatus    = document.getElementById('sync-db-status');
+
+      if (isConnected) {
+        badge.className       = 'sync-status connected';
+        statusText.textContent = 'Conectado ao Supabase';
+        dbStatus.textContent   = '✓ Online';
+      } else {
+        badge.className       = 'sync-status offline';
+        statusText.textContent = 'Modo offline (localStorage)';
+        dbStatus.textContent   = '— Offline';
+      }
+
+      // Última sincronização
+      const lastSync = Sync.lastSyncAt();
+      const lastSyncEl = document.getElementById('sync-last-time');
+      if (lastSync) {
+        const d = new Date(lastSync);
+        lastSyncEl.textContent = d.toLocaleString('pt-BR', {
+          day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'
+        });
+      } else {
+        lastSyncEl.textContent = 'Nunca';
+      }
+
+      // Contagens
+      const tasks    = Store.get('tasks', []);
+      const schedule = Store.get('schedule', []);
+      document.getElementById('sync-tasks-count').textContent    = tasks.length    + ' tarefa' + (tasks.length !== 1 ? 's' : '');
+      document.getElementById('sync-schedule-count').textContent = schedule.length + ' bloco'  + (schedule.length !== 1 ? 's' : '');
+    }
+
+    /* ─── SALVAR PERFIL ─── */
+    document.getElementById('btn-save-profile')?.addEventListener('click', async () => {
+      const username = document.getElementById('edit-username').value.trim() || 'Usuário';
+      const avatar   = document.getElementById('edit-avatar').value.trim()   || username.charAt(0).toUpperCase();
+
+      const settings = Store.get('settings', {});
+      settings.username = username;
+      settings.avatar   = avatar;
+      Store.set('settings', settings); // Store.set dispara Sync automaticamente
+
+      // Atualiza UI imediatamente
+      document.getElementById('profile-display-name').textContent = username;
+      document.getElementById('profile-avatar-big').textContent   = avatar;
+      if (typeof Profile !== 'undefined') Profile.init();
+
+      Toast.show('Perfil salvo!', 'success');
+    });
+
+    /* ─── AVATAR PRESETS ─── */
+    document.querySelectorAll('.avatar-preset').forEach(el => {
+      el.addEventListener('click', () => {
+        document.getElementById('edit-avatar').value = el.dataset.av;
+      });
+    });
+
+    /* ─── ALTERAR SENHA ─── */
+    document.getElementById('btn-change-password')?.addEventListener('click', async () => {
+      const newPass  = document.getElementById('new-password').value;
+      const confPass = document.getElementById('confirm-password').value;
+      if (newPass.length < 8)     { Toast.show('Senha deve ter ao menos 8 caracteres.', 'warning'); return; }
+      if (newPass !== confPass)   { Toast.show('As senhas não conferem.', 'warning'); return; }
+
+      const { error } = await window.supabaseClient.auth.updateUser({ password: newPass });
+      if (error) { Toast.show('Erro: ' + error.message, 'error'); return; }
+
+      Toast.show('Senha atualizada com sucesso!', 'success');
+      document.getElementById('new-password').value    = '';
+      document.getElementById('confirm-password').value = '';
+    });
+
+    /* ─── SYNC NOW ─── */
+    document.getElementById('btn-sync-now')?.addEventListener('click', async () => {
+      const btn = document.getElementById('btn-sync-now');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-rotate fa-spin"></i> Sincronizando…';
+      await Sync.pushAll();
+      _updateSyncStatus();
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Sincronizar agora';
+    });
+
+    /* ─── PULL (restaurar da nuvem) ─── */
+    document.getElementById('btn-pull-now')?.addEventListener('click', async () => {
+      const btn = document.getElementById('btn-pull-now');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down fa-bounce"></i> Restaurando…';
+      await Sync.pull();
+      _loadProfileForm();
+      _updateSyncStatus();
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> Restaurar da nuvem';
+      Toast.show('Dados restaurados da nuvem ✓', 'success');
+    });
+
+    /* ─── LIMPAR DADOS LOCAIS ─── */
+    document.getElementById('btn-clear-local')?.addEventListener('click', () => {
+      if (!confirm('Limpar todos os dados locais deste dispositivo? Os dados na nuvem serão mantidos.')) return;
+      Store.clear();
+      Toast.show('Dados locais apagados. Recarregando…', 'info');
+      setTimeout(() => location.reload(), 1500);
+    });
+
+    /* ─── LOGOUT ─── */
+    document.getElementById('btn-logout')?.addEventListener('click', async () => {
+      await Auth.signOut(); // onAuthStateChange cuida do redirect
+    });
+  </script>
+</body>
+</html>

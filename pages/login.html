@@ -9,9 +9,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <!-- Supabase CDN -->
+  <!-- Supabase UMD — deve vir antes de qualquer script do app -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <!-- Env vars injected by /api/env serverless function -->
+  <!-- Env vars injetadas pela Vercel serverless function -->
   <script src="/api/env.js"></script>
   <link rel="stylesheet" href="../css/themes.css" />
   <link rel="stylesheet" href="../css/style.css" />
@@ -205,8 +205,7 @@
       color: var(--text-3);
       margin-top: 8px;
     }
-  </style>
-</head>
+  </style></head>
 <body>
   <div class="login-card">
     <div class="login-logo">
@@ -265,90 +264,15 @@
 
     <p class="auth-hint" id="auth-hint">Ao continuar você concorda com os termos de uso.</p>
   </div>
-
   <script src="../js/main.js"></script>
   <script src="../js/supabase.js"></script>
   <script>
-    // ── If already logged in, go to dashboard
-    (async () => {
-      if (!window.__ENV?.SUPABASE_URL) return; // offline mode
-      const { data: { session } } = await window.supabase
-        .createClient(window.__ENV.SUPABASE_URL, window.__ENV.SUPABASE_ANON_KEY)
-        .auth.getSession();
+    // Se já tem sessão ativa, vai direto ao dashboard
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!window.__ENV?.SUPABASE_URL) return; // offline
+      const { data: { session } } = await window.supabaseClient?.auth.getSession()
+        ?? { data: { session: null } };
       if (session?.user) window.location.href = '../index.html';
-    })();
-
-    // ── Tab switching
-    const tabLogin  = document.getElementById('tab-login');
-    const tabSignup = document.getElementById('tab-signup');
-    const formLogin = document.getElementById('form-login');
-    const formSignup= document.getElementById('form-signup');
-
-    tabLogin.addEventListener('click', () => {
-      tabLogin.classList.add('active'); tabSignup.classList.remove('active');
-      formLogin.style.display  = 'flex'; formSignup.style.display = 'none';
-      clearMessages();
-    });
-    tabSignup.addEventListener('click', () => {
-      tabSignup.classList.add('active'); tabLogin.classList.remove('active');
-      formSignup.style.display = 'flex'; formLogin.style.display  = 'none';
-      clearMessages();
-    });
-
-    // ── Messages
-    function showErr(msg) {
-      const el = document.getElementById('err-msg');
-      el.textContent = msg; el.classList.add('visible');
-      document.getElementById('ok-msg').classList.remove('visible');
-    }
-    function showOk(msg) {
-      const el = document.getElementById('ok-msg');
-      el.textContent = msg; el.classList.add('visible');
-      document.getElementById('err-msg').classList.remove('visible');
-    }
-    function clearMessages() {
-      document.getElementById('err-msg').classList.remove('visible');
-      document.getElementById('ok-msg').classList.remove('visible');
-    }
-
-    // ── Login
-    document.getElementById('btn-login').addEventListener('click', async () => {
-      const btn   = document.getElementById('btn-login');
-      const email = document.getElementById('login-email').value.trim();
-      const pass  = document.getElementById('login-password').value;
-      if (!email || !pass) { showErr('Preencha e-mail e senha.'); return; }
-      btn.disabled = true; btn.textContent = 'Entrando…';
-      const { error } = await Auth.signIn(email, pass);
-      if (error) { showErr(error.message); btn.disabled = false; btn.textContent = 'Entrar'; return; }
-      window.location.href = '../index.html';
-    });
-
-    // ── Signup
-    document.getElementById('btn-signup').addEventListener('click', async () => {
-      const btn   = document.getElementById('btn-signup');
-      const email = document.getElementById('signup-email').value.trim();
-      const pass  = document.getElementById('signup-password').value;
-      const conf  = document.getElementById('signup-confirm').value;
-      if (!email || !pass) { showErr('Preencha todos os campos.'); return; }
-      if (pass.length < 8)  { showErr('Senha deve ter ao menos 8 caracteres.'); return; }
-      if (pass !== conf)    { showErr('As senhas não conferem.'); return; }
-      btn.disabled = true; btn.textContent = 'Criando…';
-      const { error } = await Auth.signUp(email, pass);
-      if (error) { showErr(error.message); btn.disabled = false; btn.textContent = 'Criar conta'; return; }
-      showOk('Conta criada! Verifique seu e-mail para confirmar.');
-      btn.disabled = false; btn.textContent = 'Criar conta';
-    });
-
-    // ── Google OAuth
-    [document.getElementById('btn-google'), document.getElementById('btn-google-2')]
-      .forEach(btn => btn?.addEventListener('click', () => Auth.signInWithGoogle()));
-
-    // ── Enter key submit
-    document.getElementById('login-password').addEventListener('keydown', e => {
-      if (e.key === 'Enter') document.getElementById('btn-login').click();
-    });
-    document.getElementById('signup-confirm').addEventListener('keydown', e => {
-      if (e.key === 'Enter') document.getElementById('btn-signup').click();
     });
   </script>
 </body>
