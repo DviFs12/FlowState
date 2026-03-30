@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlowState — Entrar</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+  <link rel="manifest" href="../manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <!-- Env vars injected by /api/env serverless function -->
+  <script src="/api/env.js"></script>
+  <link rel="stylesheet" href="../css/themes.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: var(--bg);
+    }
+
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px;
+      width: 100%;
+      max-width: 420px;
+      margin: 20px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .login-logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .login-logo .logo-icon {
+      display: block;
+      font-size: 40px;
+      color: var(--primary);
+      filter: drop-shadow(0 0 12px var(--primary-glow));
+      margin-bottom: 8px;
+    }
+
+    .login-logo h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .login-logo p {
+      font-size: 13px;
+      color: var(--text-2);
+      margin-top: 4px;
+    }
+
+    .auth-tabs {
+      display: flex;
+      background: var(--surface-2);
+      border-radius: 10px;
+      padding: 3px;
+      margin-bottom: 24px;
+      gap: 3px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      background: none;
+      border: none;
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text-2);
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .auth-tab.active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .auth-form { display: flex; flex-direction: column; gap: 14px; }
+
+    .auth-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .auth-field label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .auth-input {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s;
+      width: 100%;
+    }
+
+    .auth-input:focus { border-color: var(--primary); }
+
+    .btn-auth {
+      background: var(--primary);
+      color: var(--text-inv);
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      transition: all .2s;
+      margin-top: 4px;
+    }
+
+    .btn-auth:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .btn-auth:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 4px 0;
+      color: var(--text-3);
+      font-size: 12px;
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-hover);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 11px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      transition: all .2s;
+    }
+
+    .btn-google:hover { background: var(--surface-3); }
+
+    .auth-error {
+      background: rgba(248,113,113,0.12);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      display: none;
+    }
+
+    .auth-error.visible { display: block; }
+
+    .auth-success {
+      background: var(--primary-dim);
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      display: none;
+    }
+
+    .auth-success.visible { display: block; }
+
+    .auth-hint {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-3);
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="login-logo">
+      <span class="logo-icon">⟁</span>
+      <h1>FlowState</h1>
+      <p>Produtividade com propósito</p>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login">Entrar</button>
+      <button class="auth-tab" id="tab-signup">Criar conta</button>
+    </div>
+
+    <div id="err-msg"  class="auth-error"></div>
+    <div id="ok-msg"   class="auth-success"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="form-login" class="auth-form">
+      <div class="auth-field">
+        <label>E-mail</label>
+        <input type="email" id="login-email" class="auth-input" placeholder="seu@email.com" autocomplete="email" />
+      </div>
+      <div class="auth-field">
+        <label>Senha</label>
+        <input type="password" id="login-password" class="auth-input" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <button class="btn-auth" id="btn-login">Entrar</button>
+      <div class="auth-divider">ou</div>
+      <button class="btn-google" id="btn-google">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+        Continuar com Google
+      </button>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div id="form-signup" class="auth-form" style="display:none">
+      <div class="auth-field">
+        <label>E-mail</label>
+        <input type="email" id="signup-email" class="auth-input" placeholder="seu@email.com" autocomplete="email" />
+      </div>
+      <div class="auth-field">
+        <label>Senha (mínimo 8 caracteres)</label>
+        <input type="password" id="signup-password" class="auth-input" placeholder="••••••••" autocomplete="new-password" />
+      </div>
+      <div class="auth-field">
+        <label>Confirmar senha</label>
+        <input type="password" id="signup-confirm" class="auth-input" placeholder="••••••••" autocomplete="new-password" />
+      </div>
+      <button class="btn-auth" id="btn-signup" style="background:var(--accent-purple)">Criar conta</button>
+      <div class="auth-divider">ou</div>
+      <button class="btn-google" id="btn-google-2">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+        Continuar com Google
+      </button>
+    </div>
+
+    <p class="auth-hint" id="auth-hint">Ao continuar você concorda com os termos de uso.</p>
+  </div>
+
+  <script src="../js/main.js"></script>
+  <script src="../js/supabase.js"></script>
+  <script>
+    // ── If already logged in, go to dashboard
+    (async () => {
+      if (!window.__ENV?.SUPABASE_URL) return; // offline mode
+      const { data: { session } } = await window.supabase
+        .createClient(window.__ENV.SUPABASE_URL, window.__ENV.SUPABASE_ANON_KEY)
+        .auth.getSession();
+      if (session?.user) window.location.href = '../index.html';
+    })();
+
+    // ── Tab switching
+    const tabLogin  = document.getElementById('tab-login');
+    const tabSignup = document.getElementById('tab-signup');
+    const formLogin = document.getElementById('form-login');
+    const formSignup= document.getElementById('form-signup');
+
+    tabLogin.addEventListener('click', () => {
+      tabLogin.classList.add('active'); tabSignup.classList.remove('active');
+      formLogin.style.display  = 'flex'; formSignup.style.display = 'none';
+      clearMessages();
+    });
+    tabSignup.addEventListener('click', () => {
+      tabSignup.classList.add('active'); tabLogin.classList.remove('active');
+      formSignup.style.display = 'flex'; formLogin.style.display  = 'none';
+      clearMessages();
+    });
+
+    // ── Messages
+    function showErr(msg) {
+      const el = document.getElementById('err-msg');
+      el.textContent = msg; el.classList.add('visible');
+      document.getElementById('ok-msg').classList.remove('visible');
+    }
+    function showOk(msg) {
+      const el = document.getElementById('ok-msg');
+      el.textContent = msg; el.classList.add('visible');
+      document.getElementById('err-msg').classList.remove('visible');
+    }
+    function clearMessages() {
+      document.getElementById('err-msg').classList.remove('visible');
+      document.getElementById('ok-msg').classList.remove('visible');
+    }
+
+    // ── Login
+    document.getElementById('btn-login').addEventListener('click', async () => {
+      const btn   = document.getElementById('btn-login');
+      const email = document.getElementById('login-email').value.trim();
+      const pass  = document.getElementById('login-password').value;
+      if (!email || !pass) { showErr('Preencha e-mail e senha.'); return; }
+      btn.disabled = true; btn.textContent = 'Entrando…';
+      const { error } = await Auth.signIn(email, pass);
+      if (error) { showErr(error.message); btn.disabled = false; btn.textContent = 'Entrar'; return; }
+      window.location.href = '../index.html';
+    });
+
+    // ── Signup
+    document.getElementById('btn-signup').addEventListener('click', async () => {
+      const btn   = document.getElementById('btn-signup');
+      const email = document.getElementById('signup-email').value.trim();
+      const pass  = document.getElementById('signup-password').value;
+      const conf  = document.getElementById('signup-confirm').value;
+      if (!email || !pass) { showErr('Preencha todos os campos.'); return; }
+      if (pass.length < 8)  { showErr('Senha deve ter ao menos 8 caracteres.'); return; }
+      if (pass !== conf)    { showErr('As senhas não conferem.'); return; }
+      btn.disabled = true; btn.textContent = 'Criando…';
+      const { error } = await Auth.signUp(email, pass);
+      if (error) { showErr(error.message); btn.disabled = false; btn.textContent = 'Criar conta'; return; }
+      showOk('Conta criada! Verifique seu e-mail para confirmar.');
+      btn.disabled = false; btn.textContent = 'Criar conta';
+    });
+
+    // ── Google OAuth
+    [document.getElementById('btn-google'), document.getElementById('btn-google-2')]
+      .forEach(btn => btn?.addEventListener('click', () => Auth.signInWithGoogle()));
+
+    // ── Enter key submit
+    document.getElementById('login-password').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('btn-login').click();
+    });
+    document.getElementById('signup-confirm').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('btn-signup').click();
+    });
+  </script>
+</body>
+</html>
