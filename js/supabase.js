@@ -134,10 +134,18 @@ const Auth = {
       _supa.auth.onAuthStateChange(async (event, session) => {
         this.user = session?.user ?? null;
 
-        if (event === 'SIGNED_IN' && !isLoginPage) {
-          await Sync.pull();
-          if (typeof Profile !== 'undefined') Profile.init();
-          if (typeof Toast !== 'undefined') Toast.show('Sessão iniciada ✓', 'success');
+        // Re-avalia a cada evento (evita capturar o closure estático da init)
+        const _isLogin = window.location.pathname.includes('login');
+
+        if (event === 'SIGNED_IN') {
+          if (_isLogin) {
+            // OAuth callback ou login concluído — redireciona para o dashboard
+            window.location.href = _rootPath() + 'index.html';
+          } else {
+            await Sync.pull();
+            if (typeof Profile !== 'undefined') Profile.init();
+            if (typeof Toast !== 'undefined') Toast.show('Sessão iniciada ✓', 'success');
+          }
         }
 
         if (event === 'SIGNED_OUT') {

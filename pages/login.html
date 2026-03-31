@@ -9,10 +9,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <!-- Supabase UMD — deve vir antes de qualquer script do app -->
+
+  <!-- 1. Supabase UMD — deve vir antes de TUDO -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <!-- Env vars injetadas pela Vercel serverless function -->
+  <!-- 2. Env vars da Vercel (define window.__ENV) -->
   <script src="/api/env.js"></script>
+
   <link rel="stylesheet" href="../css/themes.css" />
   <link rel="stylesheet" href="../css/style.css" />
   <style>
@@ -39,7 +41,6 @@
       text-align: center;
       margin-bottom: 32px;
     }
-
     .login-logo .logo-icon {
       display: block;
       font-size: 40px;
@@ -47,13 +48,11 @@
       filter: drop-shadow(0 0 12px var(--primary-glow));
       margin-bottom: 8px;
     }
-
     .login-logo h1 {
       font-family: 'Syne', sans-serif;
       font-size: 24px;
       font-weight: 800;
     }
-
     .login-logo p {
       font-size: 13px;
       color: var(--text-2);
@@ -68,7 +67,6 @@
       margin-bottom: 24px;
       gap: 3px;
     }
-
     .auth-tab {
       flex: 1;
       background: none;
@@ -82,7 +80,6 @@
       cursor: pointer;
       transition: all .2s;
     }
-
     .auth-tab.active {
       background: var(--surface);
       color: var(--text);
@@ -91,12 +88,7 @@
 
     .auth-form { display: flex; flex-direction: column; gap: 14px; }
 
-    .auth-field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
+    .auth-field { display: flex; flex-direction: column; gap: 6px; }
     .auth-field label {
       font-size: 12px;
       font-weight: 600;
@@ -117,7 +109,6 @@
       transition: border-color .2s;
       width: 100%;
     }
-
     .auth-input:focus { border-color: var(--primary); }
 
     .btn-auth {
@@ -134,8 +125,7 @@
       transition: all .2s;
       margin-top: 4px;
     }
-
-    .btn-auth:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .btn-auth:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
     .btn-auth:disabled { opacity: .6; cursor: not-allowed; transform: none; }
 
     .auth-divider {
@@ -146,14 +136,8 @@
       color: var(--text-3);
       font-size: 12px;
     }
-
     .auth-divider::before,
-    .auth-divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
+    .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
     .btn-google {
       display: flex;
@@ -172,40 +156,30 @@
       width: 100%;
       transition: all .2s;
     }
-
     .btn-google:hover { background: var(--surface-3); }
 
-    .auth-error {
-      background: rgba(248,113,113,0.12);
-      border: 1px solid var(--danger);
-      color: var(--danger);
+    .auth-msg {
       border-radius: 8px;
       padding: 10px 14px;
       font-size: 13px;
       display: none;
+      margin-bottom: 4px;
     }
-
-    .auth-error.visible { display: block; }
-
-    .auth-success {
-      background: var(--primary-dim);
-      border: 1px solid var(--primary);
-      color: var(--primary);
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 13px;
-      display: none;
-    }
-
-    .auth-success.visible { display: block; }
+    .auth-msg.error   { background: rgba(248,113,113,0.12); border: 1px solid var(--danger);  color: var(--danger);  }
+    .auth-msg.success { background: var(--primary-dim);     border: 1px solid var(--primary); color: var(--primary); }
+    .auth-msg.visible { display: block; }
 
     .auth-hint {
       text-align: center;
       font-size: 12px;
       color: var(--text-3);
-      margin-top: 8px;
+      margin-top: 16px;
     }
-  </style></head>
+
+    /* Loading spinner on btn */
+    .btn-auth.loading { pointer-events: none; opacity: .75; }
+  </style>
+</head>
 <body>
   <div class="login-card">
     <div class="login-logo">
@@ -214,66 +188,311 @@
       <p>Produtividade com propósito</p>
     </div>
 
+    <!-- Tabs -->
     <div class="auth-tabs">
       <button class="auth-tab active" id="tab-login">Entrar</button>
-      <button class="auth-tab" id="tab-signup">Criar conta</button>
+      <button class="auth-tab"        id="tab-signup">Criar conta</button>
     </div>
 
-    <div id="err-msg"  class="auth-error"></div>
-    <div id="ok-msg"   class="auth-success"></div>
+    <!-- Mensagens de feedback -->
+    <div id="auth-msg" class="auth-msg"></div>
 
-    <!-- LOGIN FORM -->
+    <!-- ── FORMULÁRIO LOGIN ── -->
     <div id="form-login" class="auth-form">
       <div class="auth-field">
         <label>E-mail</label>
-        <input type="email" id="login-email" class="auth-input" placeholder="seu@email.com" autocomplete="email" />
+        <input type="email" id="login-email" class="auth-input"
+               placeholder="seu@email.com" autocomplete="email" />
       </div>
       <div class="auth-field">
         <label>Senha</label>
-        <input type="password" id="login-password" class="auth-input" placeholder="••••••••" autocomplete="current-password" />
+        <input type="password" id="login-password" class="auth-input"
+               placeholder="••••••••" autocomplete="current-password" />
       </div>
       <button class="btn-auth" id="btn-login">Entrar</button>
       <div class="auth-divider">ou</div>
-      <button class="btn-google" id="btn-google">
-        <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+      <button class="btn-google" id="btn-google-login">
+        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+          <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+          <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+          <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+          <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+        </svg>
         Continuar com Google
       </button>
     </div>
 
-    <!-- SIGNUP FORM -->
+    <!-- ── FORMULÁRIO CADASTRO ── -->
     <div id="form-signup" class="auth-form" style="display:none">
       <div class="auth-field">
         <label>E-mail</label>
-        <input type="email" id="signup-email" class="auth-input" placeholder="seu@email.com" autocomplete="email" />
+        <input type="email" id="signup-email" class="auth-input"
+               placeholder="seu@email.com" autocomplete="email" />
       </div>
       <div class="auth-field">
         <label>Senha (mínimo 8 caracteres)</label>
-        <input type="password" id="signup-password" class="auth-input" placeholder="••••••••" autocomplete="new-password" />
+        <input type="password" id="signup-password" class="auth-input"
+               placeholder="••••••••" autocomplete="new-password" />
       </div>
       <div class="auth-field">
         <label>Confirmar senha</label>
-        <input type="password" id="signup-confirm" class="auth-input" placeholder="••••••••" autocomplete="new-password" />
+        <input type="password" id="signup-confirm" class="auth-input"
+               placeholder="••••••••" autocomplete="new-password" />
       </div>
-      <button class="btn-auth" id="btn-signup" style="background:var(--accent-purple)">Criar conta</button>
+      <button class="btn-auth" id="btn-signup"
+              style="background:var(--accent-purple)">Criar conta</button>
       <div class="auth-divider">ou</div>
-      <button class="btn-google" id="btn-google-2">
-        <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+      <button class="btn-google" id="btn-google-signup">
+        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+          <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+          <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+          <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+          <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+        </svg>
         Continuar com Google
       </button>
     </div>
 
-    <p class="auth-hint" id="auth-hint">Ao continuar você concorda com os termos de uso.</p>
+    <p class="auth-hint">Ao continuar você concorda com os termos de uso.</p>
   </div>
+
+  <!-- 3. main.js — define Store, Toast, ThemeManager -->
   <script src="../js/main.js"></script>
+  <!-- 4. supabase.js — define Auth, Sync, patcha Store.set -->
   <script src="../js/supabase.js"></script>
+
   <script>
-    // Se já tem sessão ativa, vai direto ao dashboard
-    document.addEventListener('DOMContentLoaded', async () => {
-      if (!window.__ENV?.SUPABASE_URL) return; // offline
-      const { data: { session } } = await window.supabaseClient?.auth.getSession()
-        ?? { data: { session: null } };
-      if (session?.user) window.location.href = '../index.html';
-    });
+    /**
+     * login.js (inline)
+     *
+     * Bugs corrigidos vs versão anterior:
+     *  A. Todo o bloco de event listeners havia sido removido acidentalmente —
+     *     tabs, login, signup e Google não tinham nenhum addEventListener.
+     *  B. supabaseClient era null no check de sessão pois _initClient()
+     *     só rodava dentro de Auth.init() que não é chamado aqui.
+     *     Fix: inicializa o client diretamente com _loginInitClient().
+     *  C. signInWithGoogle usava _supa interno de supabase.js que estava null.
+     *     Fix: usa window.supabaseClient diretamente (exposto por _loginInitClient).
+     *  D. onAuthStateChange SIGNED_IN não redirecionava quando estava na login page.
+     *     Fix: listener local escuta SIGNED_IN e redireciona para o dashboard.
+     *  E. redirectTo para Google OAuth era origin + '/' — em alguns ambientes
+     *     isso não bate com a URI cadastrada no Supabase.
+     *     Fix: usa origin + '/index.html' (path explícito).
+     */
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+      /* ── 1. Inicializa client Supabase para esta página ── */
+      function _loginInitClient() {
+        const url = window.__ENV?.SUPABASE_URL;
+        const key = window.__ENV?.SUPABASE_ANON_KEY;
+        if (!url || !key) return null;
+        if (typeof window.supabase === 'undefined') return null;
+        if (window.supabaseClient) return window.supabaseClient; // já existe
+        const client = window.supabase.createClient(url, key, {
+          auth: {
+            persistSession:     true,
+            autoRefreshToken:   true,
+            detectSessionInUrl: true,
+            storageKey:         'flowstate_auth'
+          }
+        });
+        window.supabaseClient = client;
+        return client;
+      }
+
+      const client = _loginInitClient();
+
+      /* ── 2. Se já está logado, vai para o dashboard ── */
+      async function _checkExistingSession() {
+        if (!client) return; // offline
+        try {
+          const { data: { session } } = await client.auth.getSession();
+          if (session?.user) {
+            window.location.href = '../index.html';
+          }
+        } catch (err) {
+          console.warn('[login] getSession error:', err.message);
+        }
+      }
+      _checkExistingSession();
+
+      /* ── 3. Escuta SIGNED_IN para redirecionar após OAuth ── */
+      if (client) {
+        client.auth.onAuthStateChange((event) => {
+          if (event === 'SIGNED_IN') {
+            window.location.href = '../index.html';
+          }
+        });
+      }
+
+      /* ── 4. Helpers de mensagem ── */
+      const msgEl = document.getElementById('auth-msg');
+
+      function showMsg(text, type) {
+        msgEl.textContent = text;
+        msgEl.className   = 'auth-msg ' + type + ' visible';
+      }
+      function clearMsg() {
+        msgEl.className   = 'auth-msg';
+        msgEl.textContent = '';
+      }
+
+      /* ── 5. Alternância de abas ── */
+      const tabLogin  = document.getElementById('tab-login');
+      const tabSignup = document.getElementById('tab-signup');
+      const formLogin = document.getElementById('form-login');
+      const formSignup= document.getElementById('form-signup');
+
+      function showLogin() {
+        tabLogin.classList.add('active');
+        tabSignup.classList.remove('active');
+        formLogin.style.display  = 'flex';
+        formSignup.style.display = 'none';
+        clearMsg();
+        document.getElementById('login-email').focus();
+      }
+
+      function showSignup() {
+        tabSignup.classList.add('active');
+        tabLogin.classList.remove('active');
+        formSignup.style.display = 'flex';
+        formLogin.style.display  = 'none';
+        clearMsg();
+        document.getElementById('signup-email').focus();
+      }
+
+      tabLogin.addEventListener('click',  showLogin);
+      tabSignup.addEventListener('click', showSignup);
+
+      /* ── 6. LOGIN ── */
+      async function handleLogin() {
+        const email = document.getElementById('login-email').value.trim();
+        const pass  = document.getElementById('login-password').value;
+        const btn   = document.getElementById('btn-login');
+
+        if (!email || !pass) { showMsg('Preencha e-mail e senha.', 'error'); return; }
+
+        if (!client) {
+          showMsg('Supabase não configurado. Verifique as variáveis de ambiente.', 'error');
+          return;
+        }
+
+        btn.disabled   = true;
+        btn.textContent= 'Entrando…';
+        clearMsg();
+
+        try {
+          const { error } = await client.auth.signInWithPassword({ email, password: pass });
+          if (error) {
+            showMsg(_translateError(error.message), 'error');
+          }
+          // Sucesso: onAuthStateChange cuida do redirect para index.html
+        } catch (err) {
+          showMsg('Erro inesperado. Tente novamente.', 'error');
+          console.error('[login]', err);
+        } finally {
+          btn.disabled   = false;
+          btn.textContent= 'Entrar';
+        }
+      }
+
+      document.getElementById('btn-login').addEventListener('click', handleLogin);
+
+      document.getElementById('login-password').addEventListener('keydown', e => {
+        if (e.key === 'Enter') handleLogin();
+      });
+
+      /* ── 7. CADASTRO ── */
+      async function handleSignup() {
+        const email = document.getElementById('signup-email').value.trim();
+        const pass  = document.getElementById('signup-password').value;
+        const conf  = document.getElementById('signup-confirm').value;
+        const btn   = document.getElementById('btn-signup');
+
+        if (!email || !pass) { showMsg('Preencha todos os campos.', 'error'); return; }
+        if (pass.length < 8)  { showMsg('Senha deve ter ao menos 8 caracteres.', 'error'); return; }
+        if (pass !== conf)    { showMsg('As senhas não conferem.', 'error'); return; }
+
+        if (!client) {
+          showMsg('Supabase não configurado. Verifique as variáveis de ambiente.', 'error');
+          return;
+        }
+
+        btn.disabled   = true;
+        btn.textContent= 'Criando conta…';
+        clearMsg();
+
+        try {
+          const { data, error } = await client.auth.signUp({ email, password: pass });
+          if (error) {
+            showMsg(_translateError(error.message), 'error');
+          } else if (data?.user && !data.session) {
+            // E-mail de confirmação enviado (confirmação habilitada no Supabase)
+            showMsg('Conta criada! Verifique seu e-mail para confirmar.', 'success');
+          }
+          // Se session existe: onAuthStateChange redireciona automaticamente
+        } catch (err) {
+          showMsg('Erro inesperado. Tente novamente.', 'error');
+          console.error('[signup]', err);
+        } finally {
+          btn.disabled   = false;
+          btn.textContent= 'Criar conta';
+        }
+      }
+
+      document.getElementById('btn-signup').addEventListener('click', handleSignup);
+
+      document.getElementById('signup-confirm').addEventListener('keydown', e => {
+        if (e.key === 'Enter') handleSignup();
+      });
+
+      /* ── 8. GOOGLE OAUTH ── */
+      async function handleGoogle() {
+        if (!client) {
+          showMsg('Supabase não configurado.', 'error');
+          return;
+        }
+        try {
+          const { error } = await client.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+              // redirectTo deve bater com a URI cadastrada no Google Cloud Console
+              // e no Supabase Auth → Redirect URLs
+              redirectTo: window.location.origin + '/index.html'
+            }
+          });
+          if (error) showMsg(_translateError(error.message), 'error');
+          // Sucesso: browser redireciona para Google, depois volta para redirectTo
+        } catch (err) {
+          showMsg('Erro ao conectar com Google.', 'error');
+          console.error('[google-oauth]', err);
+        }
+      }
+
+      document.getElementById('btn-google-login').addEventListener('click',  handleGoogle);
+      document.getElementById('btn-google-signup').addEventListener('click', handleGoogle);
+
+      /* ── 9. Tradução de erros comuns do Supabase ── */
+      function _translateError(msg) {
+        if (!msg) return 'Erro desconhecido.';
+        const m = msg.toLowerCase();
+        if (m.includes('invalid login credentials') || m.includes('invalid email or password'))
+          return 'E-mail ou senha incorretos.';
+        if (m.includes('email not confirmed'))
+          return 'E-mail ainda não confirmado. Verifique sua caixa de entrada.';
+        if (m.includes('user already registered'))
+          return 'Este e-mail já possui uma conta. Faça login.';
+        if (m.includes('password should be at least'))
+          return 'Senha deve ter ao menos 6 caracteres.';
+        if (m.includes('rate limit'))
+          return 'Muitas tentativas. Aguarde alguns minutos.';
+        if (m.includes('network') || m.includes('fetch'))
+          return 'Erro de conexão. Verifique sua internet.';
+        return msg; // mensagem original como fallback
+      }
+
+    }); // fim DOMContentLoaded
   </script>
 </body>
 </html>
