@@ -1,6 +1,6 @@
 # ⟁ FlowState — Produtividade com Propósito
 
-> Uma aplicação de produtividade moderna, responsiva e personalizável. 100% offline, sem backend.
+> Uma aplicação de produtividade moderna, responsiva e personalizável.
 
 ![FlowState](https://img.shields.io/badge/FlowState-v1.0.0-6ee7b7?style=for-the-badge)
 ![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Ready-brightgreen?style=for-the-badge)
