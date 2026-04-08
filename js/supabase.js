@@ -81,16 +81,40 @@ function _initStorePatch() {
       try {
         if (key === 'tasks') {
           const rows = (Array.isArray(value) ? value : []).map(t => clientTaskToDb(t, Auth.uid));
+          // 1. Upsert todos os itens presentes no localStorage
           if (rows.length) {
             const { error } = await _supa.from('tasks').upsert(rows, { onConflict: 'id' });
-            if (error) console.error('[Store→tasks]', error.message);
+            if (error) { console.error('[Store→tasks upsert]', error.message); return; }
+          }
+          // 2. Deletar do banco os itens que não existem mais localmente
+          const localIds = rows.map(r => r.id);
+          const { data: dbRows, error: selErr } = await _supa
+            .from('tasks').select('id').eq('user_id', Auth.uid);
+          if (selErr) { console.error('[Store→tasks select]', selErr.message); return; }
+          const toDelete = (dbRows || []).map(r => r.id).filter(id => !localIds.includes(id));
+          if (toDelete.length) {
+            const { error: delErr } = await _supa
+              .from('tasks').delete().in('id', toDelete).eq('user_id', Auth.uid);
+            if (delErr) console.error('[Store→tasks delete]', delErr.message);
           }
 
         } else if (key === 'schedule') {
           const rows = (Array.isArray(value) ? value : []).map(e => clientScheduleToDb(e, Auth.uid));
+          // 1. Upsert todos os itens presentes no localStorage
           if (rows.length) {
             const { error } = await _supa.from('schedule').upsert(rows, { onConflict: 'id' });
-            if (error) console.error('[Store→schedule]', error.message);
+            if (error) { console.error('[Store→schedule upsert]', error.message); return; }
+          }
+          // 2. Deletar do banco os itens que não existem mais localmente
+          const localIds = rows.map(r => r.id);
+          const { data: dbRows, error: selErr } = await _supa
+            .from('schedule').select('id').eq('user_id', Auth.uid);
+          if (selErr) { console.error('[Store→schedule select]', selErr.message); return; }
+          const toDelete = (dbRows || []).map(r => r.id).filter(id => !localIds.includes(id));
+          if (toDelete.length) {
+            const { error: delErr } = await _supa
+              .from('schedule').delete().in('id', toDelete).eq('user_id', Auth.uid);
+            if (delErr) console.error('[Store→schedule delete]', delErr.message);
           }
 
         } else if (key === 'settings') {
@@ -357,9 +381,12 @@ const Sync = {
     const schedule = typeof Store !== 'undefined' ? Store.get('schedule', []) : [];
     const settings = typeof Store !== 'undefined' ? Store.get('settings', {}) : {};
 
+    // Para tasks e schedule usamos replace completo:
+    // 1. deletar tudo do usuário no banco, 2. reinserir o que está local.
+    // Isso garante que itens removidos localmente desaparecem do banco.
     await Promise.all([
-      ...tasks.map(t => this.pushTask(t)),
-      ...schedule.map(e => this.pushScheduleEvent(e)),
+      _replaceTable('tasks',    tasks.map(t => clientTaskToDb(t, Auth.uid))),
+      _replaceTable('schedule', schedule.map(e => clientScheduleToDb(e, Auth.uid))),
       this.pushSettings(settings)
     ]);
 
@@ -382,6 +409,41 @@ Sync.pull = async function () {
   await _originalPull();
   Sync._markSync();
 };
+
+/* ─── 4b. REPLACE HELPER ──────────────────────────────────── */
+
+/**
+ * Substitui completamente os dados de uma tabela para o usuário atual.
+ * Deleta linhas do banco que não existem mais localmente, insere/atualiza as que existem.
+ * Usado por pushAll() para garantir consistência total.
+ */
+async function _replaceTable(table, rows) {
+  if (!_supa || !Auth.uid) return;
+  try {
+    // Busca IDs que estão no banco
+    const { data: dbRows, error: selErr } = await _supa
+      .from(table).select('id').eq('user_id', Auth.uid);
+    if (selErr) { console.error(`[_replaceTable:${table}:select]`, selErr.message); return; }
+
+    const localIds = rows.map(r => r.id);
+    const toDelete = (dbRows || []).map(r => r.id).filter(id => !localIds.includes(id));
+
+    // Deleta orphans
+    if (toDelete.length) {
+      const { error: delErr } = await _supa
+        .from(table).delete().in('id', toDelete).eq('user_id', Auth.uid);
+      if (delErr) console.error(`[_replaceTable:${table}:delete]`, delErr.message);
+    }
+
+    // Upsert os que ficaram
+    if (rows.length) {
+      const { error: upErr } = await _supa.from(table).upsert(rows, { onConflict: 'id' });
+      if (upErr) console.error(`[_replaceTable:${table}:upsert]`, upErr.message);
+    }
+  } catch (err) {
+    console.error(`[_replaceTable:${table}]`, err);
+  }
+}
 
 /* ─── 5. MAPPERS ──────────────────────────────────────────── */
 

@@ -400,8 +400,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   document.getElementById('confirm-del')?.addEventListener('click', () => {
-    events = events.filter(e => e.id !== deletingId);
+    const idToDelete = deletingId;
+    events = events.filter(e => e.id !== idToDelete);
     save(); renderAll(); closeModal('delete-ev-modal');
+    // Propaga deleção ao Supabase diretamente
+    if (typeof Sync !== 'undefined') Sync.deleteScheduleEvent(idToDelete);
     Toast.show('Bloco removido', 'info'); deletingId = null;
   });
   document.getElementById('cancel-del')?.addEventListener('click',     () => closeModal('delete-ev-modal'));
@@ -411,7 +414,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-clear-schedule')?.addEventListener('click', () => {
     if (!events.length) { Toast.show('Cronograma vazio', 'info'); return; }
     if (!confirm('Limpar todo o cronograma?')) return;
-    events = []; save(); renderAll(); Toast.show('Cronograma limpo', 'info');
+    const removedIds = events.map(e => e.id);
+    events = []; save(); renderAll();
+    // Propaga cada deleção ao Supabase
+    if (typeof Sync !== 'undefined') {
+      removedIds.forEach(id => Sync.deleteScheduleEvent(id));
+    }
+    Toast.show('Cronograma limpo', 'info');
   });
 
   /* ─── PANEL TOGGLE ─── */

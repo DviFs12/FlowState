@@ -189,6 +189,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function deleteTask(id) {
     tasks = tasks.filter(t => t.id !== id);
     save(); render();
+    // Propaga deleção ao Supabase diretamente (save() faz upsert dos restantes,
+    // mas o select+diff do patch pode ser lento; deleteTask é imediato)
+    if (typeof Sync !== 'undefined') Sync.deleteTask(id);
     Toast.show('Tarefa removida', 'info', 2000);
   }
 
@@ -306,8 +309,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-clear-done')?.addEventListener('click', () => {
     const count = tasks.filter(t => t.done).length;
     if (!count) { Toast.show('Sem tarefas concluídas para limpar', 'info'); return; }
+    const removedIds = tasks.filter(t => t.done).map(t => t.id);
     tasks = tasks.filter(t => !t.done);
     save(); render();
+    // Propaga cada deleção ao Supabase
+    if (typeof Sync !== 'undefined') {
+      removedIds.forEach(id => Sync.deleteTask(id));
+    }
     Toast.show(`${count} tarefa${count>1?'s':''} removida${count>1?'s':''}`, 'info');
   });
 
