@@ -233,6 +233,23 @@
         </div>
       </div>
 
+      <!-- Layout -->
+      <div class="card settings-section about-card" data-animate>
+        <div class="settings-section-title">
+          <i class="fa-solid fa-table-columns"></i> Layout do Dashboard
+        </div>
+        <p style="font-size:13px;color:var(--text-2);margin-bottom:16px">
+          Arraste para reordenar os cards. Use o toggle para mostrar/ocultar.
+          Funciona apenas neste dispositivo (dados locais).
+        </p>
+        <div id="layout-cards-list" style="display:flex;flex-direction:column;gap:8px"></div>
+        <div style="margin-top:16px;display:flex;justify-content:flex-end">
+          <button class="btn-outline" id="btn-reset-layout" style="color:var(--danger);border-color:var(--danger)">
+            <i class="fa-solid fa-rotate-left"></i> Redefinir layout
+          </button>
+        </div>
+      </div>
+
       <!-- Sobre -->
       <div class="card settings-section about-card" data-animate>
         <div class="settings-section-title">
@@ -244,9 +261,9 @@
           <p>Produtividade com propósito</p>
           <div class="about-version">v1.0.0</div>
           <div class="about-features">
-            <span>✓ Backend seguro</span>
+            <span>✓ 100% offline</span>
             <span>✓ Sem rastreamento</span>
-            <span>✓ Dados locais e Nuvem</span>
+            <span>✓ Dados locais</span>
             <span>✓ Open Source</span>
           </div>
         </div>
@@ -276,8 +293,12 @@
   <script src="../js/main.js"></script>
   <script src="../js/supabase.js"></script>
   <script src="../js/settings.js"></script>
+  <script src="../js/dashboard-layout.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => Auth.init());
+    document.addEventListener('DOMContentLoaded', () => {
+      Auth.init();
+      initLayoutSettings();
+    });
   </script>
 </body>
 </html>

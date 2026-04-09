@@ -123,9 +123,9 @@
     </div>
 
     <!-- Content grid -->
-    <div class="content-grid">
+    <div class="content-grid" id="dashboard-content-grid">
       <!-- Pomodoro widget -->
-      <div class="card pomodoro-widget" data-animate>
+      <div class="card pomodoro-widget" data-animate data-card="pomodoro">
         <div class="card-header">
           <h2 class="card-title"><i class="fa-solid fa-clock"></i> Pomodoro</h2>
           <span class="cycle-badge" id="cycle-count">Ciclo 1</span>
@@ -150,7 +150,7 @@
       </div>
 
       <!-- Today's tasks preview -->
-      <div class="card tasks-preview" data-animate>
+      <div class="card tasks-preview" data-animate data-card="tasks">
         <div class="card-header">
           <h2 class="card-title"><i class="fa-solid fa-list-check"></i> Tarefas de Hoje</h2>
           <a href="pages/todo.html" class="card-link">Ver todas →</a>
@@ -162,7 +162,7 @@
       </div>
 
       <!-- Daily goals -->
-      <div class="card goals-card" data-animate>
+      <div class="card goals-card" data-animate data-card="goals">
         <div class="card-header">
           <h2 class="card-title"><i class="fa-solid fa-trophy"></i> Metas do Dia</h2>
           <button class="btn-icon-sm" id="btn-edit-goals" title="Editar metas"><i class="fa-solid fa-pen"></i></button>
@@ -178,7 +178,7 @@
       </div>
 
       <!-- Chart -->
-      <div class="card chart-card" data-animate>
+      <div class="card chart-card" data-animate data-card="chart">
         <div class="card-header">
           <h2 class="card-title"><i class="fa-solid fa-chart-line"></i> Produtividade</h2>
           <div class="chart-tabs">
@@ -188,6 +188,13 @@
         </div>
         <div class="chart-container"><canvas id="productivity-chart"></canvas></div>
       </div>
+    </div>
+
+    <!-- Add custom block button (shown below grid) -->
+    <div style="margin-top:16px;display:flex;justify-content:flex-end">
+      <button class="btn-outline" id="btn-new-custom-block" style="gap:8px">
+        <i class="fa-solid fa-plus"></i> Novo bloco personalizado
+      </button>
     </div>
   </main>
 
@@ -211,11 +218,45 @@
   </div>
 
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Custom block create/edit modal -->
+  <div class="modal-overlay" id="custom-block-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="cb-modal-title">Novo Bloco Personalizado</h3>
+        <button class="modal-close" id="cb-modal-close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="cb-id" />
+        <div class="form-group">
+          <label>Título</label>
+          <input type="text" id="cb-title" maxlength="40" placeholder="Ex: Links úteis" />
+        </div>
+        <div class="form-group">
+          <label>Ícone (emoji)</label>
+          <input type="text" id="cb-icon" maxlength="4" placeholder="📌"
+            style="width:80px;font-size:20px;text-align:center" />
+        </div>
+        <div class="form-group">
+          <label>Conteúdo</label>
+          <textarea id="cb-content" rows="4" maxlength="1000"
+            placeholder="Escreva uma nota, cole um link (https://…) ou qualquer texto."
+            style="width:100%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;resize:vertical;transition:border-color .2s"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline" id="cb-cancel">Cancelar</button>
+        <button class="btn-primary" id="cb-save">Salvar bloco</button>
+      </div>
+    </div>
+  </div>
+
   <script src="js/main.js"></script>
   <script src="js/supabase.js"></script>
   <script src="js/pomodoro.js"></script>
   <script src="js/charts.js"></script>
   <script src="js/schedule-banner.js"></script>
+  <script src="js/dashboard-layout.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => Auth.init());
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});

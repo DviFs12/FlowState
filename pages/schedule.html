@@ -55,13 +55,29 @@
     .preset-btn:hover { background:var(--primary-dim); border-color:var(--primary); color:var(--primary); }
 
     /* ── LIFE PIE ── */
-    .life-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start; }
-    .life-legend { display:flex; flex-direction:column; gap:8px; }
-    .life-legend-item { display:flex; align-items:center; justify-content:space-between; font-size:13px; }
-    .life-legend-item .leg-left { display:flex; align-items:center; gap:8px; }
+    .life-grid {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 20px;
+      align-items: center;
+    }
+    .life-chart-wrap {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      flex-shrink: 0;
+    }
+    .life-legend { display:flex; flex-direction:column; gap:8px; min-width:0; }
+    .life-legend-item { display:flex; align-items:center; justify-content:space-between; font-size:13px; gap:8px; }
+    .life-legend-item .leg-left { display:flex; align-items:center; gap:8px; min-width:0; overflow:hidden; }
+    .life-legend-item .leg-left span:last-child { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .life-legend-item .leg-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
-    .life-hours { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; }
-    .life-pct   { font-size:11px; color:var(--text-3); }
+    .life-hours { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; white-space:nowrap; }
+    .life-pct   { font-size:11px; color:var(--text-3); white-space:nowrap; }
+    @media (max-width: 600px) {
+      .life-grid { grid-template-columns: 1fr; justify-items: center; }
+      .life-chart-wrap { width:140px; height:140px; }
+    }
 
     /* ── COLOR PICKER ── */
     .color-options { display:flex; gap:6px; flex-wrap:wrap; }
@@ -72,7 +88,6 @@
     /* ── RESPONSIVE ── */
     @media (max-width:900px) {
       .sched-main-grid { grid-template-columns:1fr !important; }
-      .life-grid { grid-template-columns:1fr; }
     }
     @media (max-width:600px) {
       .time-label { font-size:8px; padding-right:4px; width:32px; }
@@ -230,7 +245,7 @@
             <span style="font-size:11px;color:var(--text-3)">média/dia</span>
           </div>
           <div class="life-grid">
-            <div style="position:relative;height:160px"><canvas id="life-chart"></canvas></div>
+            <div class="life-chart-wrap"><canvas id="life-chart"></canvas></div>
             <div class="life-legend" id="life-legend"></div>
           </div>
           <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);font-size:12px;color:var(--text-3);text-align:center" id="free-time-note"></div>
