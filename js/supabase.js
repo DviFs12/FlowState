@@ -220,6 +220,24 @@ const Auth = {
 
 /* ─── 4. SYNC ─────────────────────────────────────────────── */
 
+/* ── Tombstones: IDs deletados localmente que o pull não deve re-adicionar ── */
+const _TOMBSTONE_KEY = 'deleted_ids'; // { tasks: string[], schedule: string[] }
+
+function _getTombstones() {
+  try {
+    return JSON.parse(localStorage.getItem('flowstate_' + _TOMBSTONE_KEY) || '{}');
+  } catch { return {}; }
+}
+function _addTombstone(table, id) {
+  const t = _getTombstones();
+  t[table] = t[table] || [];
+  if (!t[table].includes(id)) t[table].push(id);
+  localStorage.setItem('flowstate_' + _TOMBSTONE_KEY, JSON.stringify(t));
+}
+function _clearTombstones() {
+  localStorage.removeItem('flowstate_' + _TOMBSTONE_KEY);
+}
+
 const Sync = {
 
   async pull() {
@@ -257,11 +275,21 @@ const Sync = {
       if (schedule.error) console.error('[pull:schedule]', schedule.error.message);
       if (settings.error) console.error('[pull:settings]', settings.error.message);
 
-      if (tasks.data?.length)
-        localSet('tasks', tasks.data.map(dbTaskToClient));
+      const tombstones = _getTombstones();
 
-      if (schedule.data?.length)
-        localSet('schedule', schedule.data.map(dbScheduleToClient));
+      // Tasks: filtra IDs que o usuário deletou localmente (tombstones)
+      if (tasks.data?.length) {
+        const deletedIds = tombstones.tasks || [];
+        const filtered   = tasks.data.filter(r => !deletedIds.includes(r.id));
+        localSet('tasks', filtered.map(dbTaskToClient));
+      }
+
+      // Schedule: idem
+      if (schedule.data?.length) {
+        const deletedIds = tombstones.schedule || [];
+        const filtered   = schedule.data.filter(r => !deletedIds.includes(r.id));
+        localSet('schedule', filtered.map(dbScheduleToClient));
+      }
 
       if (settings.data) {
         const s = settings.data;
@@ -311,6 +339,8 @@ const Sync = {
   },
 
   async deleteTask(id) {
+    // Tombstone primeiro: pull() não restaura o item mesmo se a deleção falhar por offline
+    _addTombstone('tasks', id);
     if (!_supa || !Auth.uid) return;
     const { error } = await _supa.from('tasks')
       .delete().eq('id', id).eq('user_id', Auth.uid);
@@ -325,6 +355,7 @@ const Sync = {
   },
 
   async deleteScheduleEvent(id) {
+    _addTombstone('schedule', id);
     if (!_supa || !Auth.uid) return;
     const { error } = await _supa.from('schedule')
       .delete().eq('id', id).eq('user_id', Auth.uid);
@@ -377,18 +408,37 @@ const Sync = {
 
   async pushAll() {
     if (!_supa || !Auth.uid) return;
-    const tasks    = typeof Store !== 'undefined' ? Store.get('tasks',    []) : [];
-    const schedule = typeof Store !== 'undefined' ? Store.get('schedule', []) : [];
-    const settings = typeof Store !== 'undefined' ? Store.get('settings', {}) : {};
+    const S        = typeof Store !== 'undefined' ? Store : null;
+    const tasks    = S?.get('tasks',    []) ?? [];
+    const schedule = S?.get('schedule', []) ?? [];
+    const settings = S?.get('settings', {}) ?? {};
+    const sessions = S?.get('pomo_sessions', []) ?? [];
 
-    // Para tasks e schedule usamos replace completo:
-    // 1. deletar tudo do usuário no banco, 2. reinserir o que está local.
-    // Isso garante que itens removidos localmente desaparecem do banco.
+    // Coleta todas as chaves de stats do localStorage
+    const statEntries = [];
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('flowstate_stats_'))
+      .forEach(k => {
+        try {
+          const date  = k.replace('flowstate_stats_', '');
+          const stats = JSON.parse(localStorage.getItem(k));
+          statEntries.push({ date, stats });
+        } catch {}
+      });
+
     await Promise.all([
+      // tasks e schedule: replace completo (deleta orphans + upsert locais)
       _replaceTable('tasks',    tasks.map(t => clientTaskToDb(t, Auth.uid))),
       _replaceTable('schedule', schedule.map(e => clientScheduleToDb(e, Auth.uid))),
-      this.pushSettings(settings)
+      this.pushSettings(settings),
+      // stats: upsert por (user_id, date)
+      ...statEntries.map(({ date, stats }) => this.pushStats(date, stats)),
+      // pomo_sessions: replace completo (deleta todas do usuário e reinseresessões locais)
+      _replacePomoSessions(sessions),
     ]);
+
+    // Tombstones limpos: sincronização completa bem-sucedida
+    _clearTombstones();
 
     if (typeof Toast !== 'undefined') Toast.show('Dados sincronizados ✓', 'success');
   },
@@ -443,6 +493,53 @@ async function _replaceTable(table, rows) {
   } catch (err) {
     console.error(`[_replaceTable:${table}]`, err);
   }
+}
+
+/**
+ * Substitui todas as pomo_sessions do usuário no banco.
+ * pomo_sessions usam PK auto-increment, então não têm id cliente.
+ * Estratégia: deletar todas as do usuário e re-inserir as locais.
+ */
+async function _replacePomoSessions(localSessions) {
+  if (!_supa || !Auth.uid) return;
+  try {
+    // 1. Deleta todas as sessões do usuário no banco
+    const { error: delErr } = await _supa
+      .from('pomo_sessions').delete().eq('user_id', Auth.uid);
+    if (delErr) { console.error('[_replacePomoSessions:delete]', delErr.message); return; }
+
+    // 2. Re-insere as que existem localmente
+    if (localSessions.length) {
+      const rows = localSessions.map(s => ({
+        user_id:          Auth.uid,
+        mode:             s.mode,
+        started_at:       s.startedAt,
+        duration_seconds: s.durationSeconds
+      }));
+      const { error: insErr } = await _supa.from('pomo_sessions').insert(rows);
+      if (insErr) console.error('[_replacePomoSessions:insert]', insErr.message);
+    }
+  } catch (err) {
+    console.error('[_replacePomoSessions]', err);
+  }
+}
+
+/**
+ * Deleta TODOS os dados do usuário em todas as tabelas do banco.
+ * Usado pelo reset completo (configurações e perfil).
+ * O cascade ON DELETE no schema cuida das FK, mas deletamos explicitamente
+ * para garantir mesmo sem cascade configurado.
+ */
+async function _deleteAllUserData() {
+  if (!_supa || !Auth.uid) return;
+  const tables = ['tasks', 'schedule', 'pomo_sessions', 'stats', 'settings'];
+  await Promise.all(
+    tables.map(async table => {
+      const { error } = await _supa.from(table).delete().eq('user_id', Auth.uid);
+      if (error) console.error(`[_deleteAllUserData:${table}]`, error.message);
+    })
+  );
+  _clearTombstones();
 }
 
 /* ─── 5. MAPPERS ──────────────────────────────────────────── */

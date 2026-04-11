@@ -471,11 +471,21 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('close-clear-modal')?.addEventListener('click', () => closeModal('confirm-clear-modal'));
   document.getElementById('cancel-clear')?.addEventListener('click', () => closeModal('confirm-clear-modal'));
 
-  document.getElementById('confirm-clear')?.addEventListener('click', () => {
-    // Remove all stats keys and sessions
+  document.getElementById('confirm-clear')?.addEventListener('click', async () => {
+    // 1. Remove localStorage keys de stats e sessões
     Object.keys(localStorage)
       .filter(k => k.startsWith('flowstate_stats_') || k === 'flowstate_pomo_sessions')
       .forEach(k => localStorage.removeItem(k));
+
+    // 2. Deleta do banco (pomo_sessions e stats)
+    if (typeof _supa !== 'undefined' && _supa && typeof Auth !== 'undefined' && Auth.uid) {
+      await Promise.all([
+        _supa.from('pomo_sessions').delete().eq('user_id', Auth.uid)
+          .then(({ error }) => { if (error) console.error('[clear:pomo_sessions]', error.message); }),
+        _supa.from('stats').delete().eq('user_id', Auth.uid)
+          .then(({ error }) => { if (error) console.error('[clear:stats]', error.message); })
+      ]);
+    }
 
     closeModal('confirm-clear-modal');
     Toast.show('Histórico apagado', 'info');

@@ -150,10 +150,20 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('cancel-confirm')?.addEventListener('click',() => closeModal('confirm-modal'));
 
   document.getElementById('confirm-action')?.addEventListener('click', async () => {
+    const btn = document.getElementById('confirm-action');
+    if (btn) { btn.disabled = true; btn.textContent = 'Apagando…'; }
+
+    // 1. Deleta todos os dados do usuário no banco ANTES de limpar localStorage
+    if (typeof _deleteAllUserData === 'function') {
+      await _deleteAllUserData();
+    }
+
+    // 2. Limpa localStorage
     Store.clear();
     closeModal('confirm-modal');
-    Toast.show('Dados locais apagados.', 'info');
-    // If Supabase is active, sign out fully; otherwise just reload
+    Toast.show('Dados apagados.', 'info');
+
+    // 3. Faz logout (ou recarrega em modo offline)
     if (typeof Auth !== 'undefined' && Auth.uid) {
       await Auth.signOut();
     } else {
